@@ -37,8 +37,8 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 		return dict(url="https://find.octoprint.org/registry",
 		            interval_client=300.0,
 		            interval_noclient=60.0,
-		            instance_with_name=u"OctoPrint instance \"{name}\"",
-		            instance_with_host=u"OctoPrint instance on {host}",
+		            instance_with_name=u"MrBeam \"{name}\"",
+		            instance_with_host=u"MrBeam {host}",
 		            disable_if_exists=[],
 		            public=dict(uuid=None,
 		                        scheme=None,
@@ -60,6 +60,7 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/<secret>.gif", methods=["GET"])
 	def is_online_gif(self, secret):
+
 		if self._secret != secret:
 			flask.abort(404)
 
@@ -213,13 +214,17 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 
 		headers = {"User-Agent": "OctoPrint-FindMyOctoPrint/{}".format(self._plugin_version)}
 
-		self._logger.info("Sending registration to \"Find my OctoPrint\"")
+		response = 0
 		try:
 			r = requests.post(self._url, json=data, headers=headers)
+			response = r.status_code
 			if r.status_code != 200:
-				self._logger.error("Could not update registration with \"Find my OctoPrint\", got status {}".format(r.status_code))
+				self._logger.debug("Could not update registration with \"Find my OctoPrint\", got status {}".format(r.status_code))
 		except:
-			self._logger.exception("Error while updating registration with \"Find my OctoPrint\"")
+			response = -1
+			self._logger.debug("Error while updating registration with \"Find my OctoPrint\", Exception: %s", e.args)
+
+		self._logger.info("Registration to \"Find my OctoPrint\". response: %s" , response)
 
 	@staticmethod
 	def _compile_url(scheme, host, port, path, http_user=None, http_password=None):
