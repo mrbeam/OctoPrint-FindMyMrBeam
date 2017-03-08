@@ -34,7 +34,7 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 	##~~ SettingsPlugin
 
 	def get_settings_defaults(self):
-		return dict(url="https://find.octoprint.org/registry",
+		return dict(url="http://find.mr-beam.org:5000/registry",
 		            interval_client=300.0,
 		            interval_noclient=60.0,
 		            instance_with_name=u"MrBeam \"{name}\"",
