@@ -220,7 +220,7 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 			response = r.status_code
 			if r.status_code != 200:
 				self._logger.debug("Could not update registration with \"Find my OctoPrint\", got status {}".format(r.status_code))
-		except:
+		except Exception as e:
 			response = -1
 			self._logger.debug("Error while updating registration with \"Find my OctoPrint\", Exception: %s", e.args)
 
