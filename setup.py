@@ -4,21 +4,21 @@
 ### Do not forget to adjust the following variables to your own plugin.
 
 # The plugin's identifier, has to be unique
-plugin_identifier = "findmyoctoprint"
+plugin_identifier = "findmymrbeam"
 
 # The plugin's python package, should be "octoprint_<plugin identifier>", has to be unique
-plugin_package = "octoprint_findmyoctoprint"
+plugin_package = "octoprint_findmymrbeam"
 
 # The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
-plugin_name = "OctoPrint-FindMyOctoPrint"
+plugin_name = "OctoPrint-FindMyMrBeam"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.1.0"
+plugin_version = "0.1.1"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
-plugin_description = """Client for Find My OctoPrint"""
+plugin_description = """Client for Find My MrBeam"""
 
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
 plugin_author = "Gina Häußge"
@@ -27,7 +27,7 @@ plugin_author = "Gina Häußge"
 plugin_author_email = "osd@foosel.net"
 
 # The plugin's homepage URL. Can be overwritten within OctoPrint's internal data via __plugin_url__ in the plugin module
-plugin_url = "https://github.com/OctoPrint/OctoPrint-FindMyOctoPrint"
+plugin_url = "https://github.com/mrbeam/OctoPrint-FindMyMrBeam"
 
 # The plugin's license. Can be overwritten within OctoPrint's internal data via __plugin_license__ in the plugin module
 plugin_license = "AGPLv3"

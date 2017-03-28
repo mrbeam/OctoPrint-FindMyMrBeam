@@ -12,10 +12,10 @@ import socket
 
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 
-class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
-                            octoprint.plugin.SettingsPlugin,
-                            octoprint.plugin.BlueprintPlugin,
-                            octoprint.plugin.EventHandlerPlugin):
+class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
+						 octoprint.plugin.SettingsPlugin,
+						 octoprint.plugin.BlueprintPlugin,
+						 octoprint.plugin.EventHandlerPlugin):
 
 	def __init__(self):
 		self._port = None
@@ -37,8 +37,10 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 		return dict(url="http://find.mr-beam.org:5000/registry",
 		            interval_client=300.0,
 		            interval_noclient=60.0,
-		            instance_with_name=u"MrBeam \"{name}\"",
-		            instance_with_host=u"MrBeam {host}",
+					# configured in config.yaml in appearance:{name: aBook}
+		            instance_with_name=u"{name}",
+		            instance_with_host=u"{host}",
+					instance_dev_name=u"MrBeam Development on '{}'",
 		            disable_if_exists=[],
 		            public=dict(uuid=None,
 		                        scheme=None,
@@ -70,41 +72,29 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 		response.headers["Content-Type"] = "image/gif"
 		return response
 
-	##~~ Softwareupdate hook
-
-	def get_update_information(self):
-		return dict(
-			findmyoctoprint=dict(
-				displayName=self._plugin_name,
-				displayVersion=self._plugin_version,
-
-				# version check: github repository
-				type="github_release",
-				user="OctoPrint",
-				repo="OctoPrint-FindMyOctoPrint",
-				current=self._plugin_version,
-
-				# update method: pip
-				pip="https://github.com/OctoPrint/OctoPrint-FindMyOctoPrint/archive/{target_version}.zip"
-			)
-		)
 
 	##~~ EventHandlerPlugin
 
 	def on_event(self, event, payload):
 		if not event in (octoprint.events.Events.CLIENT_OPENED,):
 			return
-		self._logger.info("Client seen, switching to slower interval for \"Find my OctoPrint\" registrations")
+		self._logger.info("Client seen, switching to slower interval for \"Find my MrBeam\" registrations")
 		self._client_seen = True
 
 	##~~ internal helpers
 
 	def _find_name(self):
+		device_name = ""
 		name = self._settings.global_get(["appearance", "name"])
 		if name:
-			return self._settings.get(["instance_with_name"]).format(name=name)
+			device_name = self._settings.get(["instance_with_name"]).format(name=name)
 		else:
-			return self._settings.get(["instance_with_host"]).format(host=socket.gethostname())
+			device_name = self._settings.get(["instance_with_host"]).format(host=socket.gethostname())
+
+		if not device_name.lower().startswith("mrbeam"):
+			device_name = self._settings.get(["instance_dev_name"]).format(device_name)
+
+		return device_name
 
 	def _find_color(self):
 		return self._settings.global_get(["appearance", "color"])
@@ -157,7 +147,7 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 		                                  ["public", "httpPass"])
 
 		# start registration thread
-		self._logger.info("Registering with \"Find my OctoPrint\" at {}".format(self._url))
+		self._logger.info("Registering with FindMyMrBeam at {}".format(self._url))
 		self._thread = octoprint.util.RepeatedTimer(self._get_interval,
 		                                            self._perform_update_request,
 		                                            args=(uuid, scheme, port, path),
@@ -182,7 +172,7 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 		return True
 
 	def _on_disabled(self, *args, **kwargs):
-		self._logger.info("Registration with \"Find my OctoPrint\" disabled.")
+		self._logger.info("Registration with FindMyMrBeam disabled.")
 
 	def _perform_update_request(self, uuid, scheme, port, path, http_user=None, http_password=None):
 		urls = []
@@ -212,19 +202,19 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 		            urls=urls,
 		            query="plugin/{}/{}".format(self._identifier, self._secret))
 
-		headers = {"User-Agent": "OctoPrint-FindMyOctoPrint/{}".format(self._plugin_version)}
+		headers = {"User-Agent": "OctoPrint-FindMyMrBeam/{}".format(self._plugin_version)}
 
 		response = 0
 		try:
 			r = requests.post(self._url, json=data, headers=headers)
 			response = r.status_code
 			if r.status_code != 200:
-				self._logger.debug("Could not update registration with \"Find my OctoPrint\", got status {}".format(r.status_code))
+				self._logger.debug("Could not update registration with FindMyMrBeam, got status {}".format(r.status_code))
 		except Exception as e:
 			response = -1
-			self._logger.debug("Error while updating registration with \"Find my OctoPrint\", Exception: %s", e.args)
+			self._logger.debug("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
 
-		self._logger.info("Registration to \"Find my OctoPrint\". response: %s" , response)
+		self._logger.info("Registration to FindMyMrBeam. response: %s" , response)
 
 	@staticmethod
 	def _compile_url(scheme, host, port, path, http_user=None, http_password=None):
@@ -237,13 +227,11 @@ class FindMyOctoPrintPlugin(octoprint.plugin.StartupPlugin,
 		return "{}://{}{}:{}{}".format(scheme, prefix, host, port, path)
 
 
-__plugin_name__ = "Find My OctoPrint"
+__plugin_name__ = "FindMyMrBeam"
 
 def __plugin_load__():
 	global __plugin_implementation__
-	__plugin_implementation__ = FindMyOctoPrintPlugin()
+	__plugin_implementation__ = FindMyMrBeamPlugin()
 
 	global __plugin_hooks__
-	__plugin_hooks__ = {
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
-	}
+	__plugin_hooks__ = {}
