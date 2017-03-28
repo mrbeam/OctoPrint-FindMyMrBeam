@@ -78,7 +78,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 	def on_event(self, event, payload):
 		if not event in (octoprint.events.Events.CLIENT_OPENED,):
 			return
-		self._logger.info("Client seen, switching to slower interval for \"Find my MrBeam\" registrations")
+		self._logger.info("Client seen, switching to slower interval for FindMyMrBeam registrations")
 		self._client_seen = True
 
 	##~~ internal helpers
