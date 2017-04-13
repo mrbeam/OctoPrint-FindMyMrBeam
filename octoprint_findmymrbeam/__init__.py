@@ -229,6 +229,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 
 __plugin_name__ = "FindMyMrBeam"
 
+
 def __plugin_load__():
 	global __plugin_implementation__
 	__plugin_implementation__ = FindMyMrBeamPlugin()
