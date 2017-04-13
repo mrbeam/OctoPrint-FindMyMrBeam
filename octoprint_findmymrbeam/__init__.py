@@ -34,7 +34,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 	##~~ SettingsPlugin
 
 	def get_settings_defaults(self):
-		return dict(url="http://find.mr-beam.org:5000/registry",
+		return dict(url="http://find.mr-beam.org/registry",
 		            interval_client=300.0,
 		            interval_noclient=60.0,
 					# configured in config.yaml in appearance:{name: aBook}
