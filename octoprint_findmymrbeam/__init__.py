@@ -27,6 +27,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 		import string
 		chars = string.ascii_lowercase + string.ascii_uppercase + string.digits
 		self._secret = "".join(choice(chars) for _ in range(32))
+		self._not_so_secret = "ping_ap_mode"
 
 	def initialize(self):
 		self._url = self._settings.get(["url"])
@@ -63,7 +64,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/<secret>.gif", methods=["GET"])
 	def is_online_gif(self, secret):
 
-		if self._secret != secret:
+		if secret not in (self._secret, self._not_so_secret):
 			flask.abort(404)
 
 		# send a transparent 1x1 px gif
