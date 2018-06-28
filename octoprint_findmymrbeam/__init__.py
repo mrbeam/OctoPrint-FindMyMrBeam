@@ -195,7 +195,9 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 
 		hostname = socket.gethostname()
 
-		urls = [compile_url(hostname + ".local"), compile_url(hostname)] + sorted(urls)
+		urls = [compile_url(hostname + ".local"),
+		        compile_url(hostname + ".fritz.box"),
+		        compile_url(hostname)] + sorted(urls)
 
 		data = dict(uuid=uuid,
 		            name=self._find_name(),
