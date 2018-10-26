@@ -197,7 +197,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 
 		urls = [compile_url(hostname + ".local"),
 		        compile_url(hostname + ".fritz.box"),
-		        compile_url(hostname)] + sorted(urls)
+		        compile_url(hostname)]\
+		       + sorted(urls)
 
 		data = dict(uuid=uuid,
 		            name=self._find_name(),
@@ -212,12 +213,12 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 			r = requests.post(self._url, json=data, headers=headers)
 			response = r.status_code
 			if r.status_code != 200:
-				self._logger.debug("Could not update registration with FindMyMrBeam, got status {}".format(r.status_code))
+				self._logger.info("Could not update registration with FindMyMrBeam, got status {}".format(r.status_code))
 		except Exception as e:
 			response = -1
-			self._logger.debug("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
+			self._logger.warn("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
 
-		self._logger.info("Registration to FindMyMrBeam. response: %s" , response)
+		self._logger.info("Registration to FindMyMrBeam. response: %s - url candidates: %s" , response, urls)
 
 	@staticmethod
 	def _compile_url(scheme, host, port, path, http_user=None, http_password=None):
