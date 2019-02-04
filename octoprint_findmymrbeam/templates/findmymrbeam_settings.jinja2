@@ -16,13 +16,13 @@
                         <span data-bind="visible: registered() && ping()">
                             Registered and verified: Service works in your network.</span>
                         <span data-bind="visible: registered() && !ping()">
-                            Registered - <a href="https://find.mr-beam.org" target="_blank">Try it</a>
+                            Registered - <a data-bind="attr: { href: find_url }" target="_blank">Try it</a>
                             to verify functionality in your network.</span>
                         <span data-bind="visible: registered() == false">Unable to register. Check Internet connection of Mr Beam II.</span>
                         <span data-bind="visible: registered() == null">Registering...</span>
                     </div>
                     <div data-bind="visible: settings.settings.plugins.findmymrbeam.enabled() && registered()">
-                        <strong>Try it:</strong> <a href="https://find.mr-beam.org" target="_blank">find.mr-beam.org</a>
+                        <strong>Try it:</strong> <a data-bind="attr: { href: find_url }" target="_blank" >find.mr-beam.org</a>
                     </div>
                 </div>
 

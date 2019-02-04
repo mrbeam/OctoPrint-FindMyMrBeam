@@ -3,8 +3,14 @@ $(function () {
         var self = this;
         self.settings = params[0];
 
+
+
         self.registered = ko.observable(null);
         self.ping = ko.observable(false);
+        self.public_ip = ko.observable(null);
+        self.find_url = ko.computed(function(){
+            return "https://find.mr-beam.org?public_ip=" + encodeURIComponent(self.public_ip());
+        });
 
 
         self.onAllBound = function () {
@@ -19,6 +25,9 @@ $(function () {
             }
             if ('ping' in data) {
                 self.ping(data['ping']);
+            }
+            if ('public_ip' in data) {
+                self.public_ip(data['public_ip']);
             }
         };
 

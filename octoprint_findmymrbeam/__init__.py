@@ -27,6 +27,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._client_seen = False
 		self._registered = -1
 		self._lastPing = 0
+		self._public_ip = None
 
 		from random import choice
 		import string
@@ -144,7 +145,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		return dict(
 			enabled=self._settings.get(['enabled']),
 			registered=registered,
-			ping=ping
+			ping=ping,
+			public_ip=self._public_ip
 		)
 
 	def _find_name(self):
@@ -301,19 +303,27 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 		headers = {"User-Agent": "OctoPrint-FindMyMrBeam/{}".format(self._plugin_version)}
 
-		response = 0
+		status_code = 0
+		body = None
 		try:
 			r = requests.post(self._url, json=data, headers=headers)
-			response = r.status_code
-			if r.status_code != 200:
-				self._logger.info("Could not update registration with FindMyMrBeam, got status {}".format(r.status_code))
+			status_code = r.status_code
+			try:
+				body = r.json()
+			except ValueError as e:
+				self._logger.warn("Error while parsing JSON from response: %s", e)
 		except Exception as e:
-			response = -1
+			status_code = -1
 			self._logger.warn("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
-		self._registered = time.time() if response == 200 else 0
+
+		self._public_ip = body['remote_ip'] if body is not None and 'remote_ip' in body else None
+		self._registered = time.time() if status_code == 200 else 0
 		self.update_frontend()
 
-		self._logger.info("Registration to FindMyMrBeam. response: %s - url candidates: %s" , response, urls)
+		if status_code == 200:
+			self._logger.info("FindMyMrBeam registration: OK  - status_code: %s, public_ip: %s, url candidates: %s" , status_code, self._public_ip, urls)
+		else:
+			self._logger.info("FindMyMrBeam registration: ERR - status_code: %s, body: %s", status_code, body)
 
 	@staticmethod
 	def _compile_url(scheme, host, port, path, http_user=None, http_password=None):
