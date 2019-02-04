@@ -8,20 +8,25 @@ import octoprint.events
 import flask
 import requests
 import netaddr
+import time
 import socket
 
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 
-class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
+class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
+						 octoprint.plugin.StartupPlugin,
 						 octoprint.plugin.SettingsPlugin,
 						 octoprint.plugin.BlueprintPlugin,
-						 octoprint.plugin.EventHandlerPlugin):
+						 octoprint.plugin.EventHandlerPlugin,
+						 octoprint.plugin.TemplatePlugin):
 
 	def __init__(self):
 		self._port = None
 		self._thread = None
 		self._url = None
 		self._client_seen = False
+		self._registered = -1
+		self._lastPing = 0
 
 		from random import choice
 		import string
@@ -31,11 +36,14 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 
 	def initialize(self):
 		self._url = self._settings.get(["url"])
+		self._logger.info("FindMyMrBeam enabled: %s", self.is_enabled())
+		self.update_frontend()
 
 	##~~ SettingsPlugin
 
 	def get_settings_defaults(self):
-		return dict(url="http://find.mr-beam.org/registry",
+		return dict(enabled=True,
+					url="http://find.mr-beam.org/registry",
 		            interval_client=300.0,
 		            interval_noclient=60.0,
 					# configured in config.yaml in appearance:{name: aBook}
@@ -50,11 +58,32 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 		                        httpUser=None,
 		                        httpPass=None))
 
+
+	def on_settings_load(self):
+		return self.get_state_data()
+
+	def on_settings_save(self, data):
+		if "enabled" in data:
+			enabled = bool(data["enabled"])
+			self._logger.info("User changed findmymrbeam enabled to: %s", enabled)
+			self._settings.set_boolean(["enabled"], enabled)
+			self.start_findmymrbeam()
+
+	##~~ AssetPlugin mixin
+
+	def get_assets(self):
+		# Define your plugin's asset files to automatically include in the
+		# core UI here.
+		assets = dict(
+			js=["js/findmymrbeam_settings_viewmodel.js"],
+		)
+		return assets
+
 	##~~ StartupPlugin
 
 	def on_startup(self, host, port):
-		if self._url and self._not_disabled():
-			self._start_update_thread(host, port)
+		self._port = port
+		self.start_findmymrbeam()
 
 	##~~ BlueprintPlugin
 
@@ -66,6 +95,11 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 
 		if secret not in (self._secret, self._not_so_secret):
 			flask.abort(404)
+
+		if not self.is_enabled():
+			flask.abort(404)
+
+		self._track_ping(flask.request.referrer)
 
 		# send a transparent 1x1 px gif
 		import base64
@@ -79,10 +113,39 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 	def on_event(self, event, payload):
 		if not event in (octoprint.events.Events.CLIENT_OPENED,):
 			return
-		self._logger.info("Client seen, switching to slower interval for FindMyMrBeam registrations")
+		if not self._client_seen and self.is_enabled():
+			self._logger.info("Client seen, switching to slower interval for FindMyMrBeam registrations")
 		self._client_seen = True
+		self.update_frontend()
+
+
+	##~~ TemplatePlugin mixin
+
+	def get_template_configs(self):
+		result = [
+			dict(type='settings', name="find.mr-beam.org", template='findmymrbeam_settings.jinja2', custom_bindings=True)
+		]
+		return result
 
 	##~~ internal helpers
+
+	def update_frontend(self):
+		payload = self.get_state_data()
+		self._plugin_manager.send_plugin_message("findmymrbeam", payload)
+
+	def get_state_data(self):
+		interval_thresh = self._get_interval() * 1, 5
+		registered = None
+		if self._registered == 0:
+			registered = False
+		elif self._registered > 0 and time.time() - self._registered <= interval_thresh:
+			registered = True
+		ping = self._lastPing > 0
+		return dict(
+			enabled=self._settings.get(['enabled']),
+			registered=registered,
+			ping=ping
+		)
 
 	def _find_name(self):
 		device_name = ""
@@ -115,11 +178,19 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 
 		return default_value
 
-	def _start_update_thread(self, host, port):
+	def start_findmymrbeam(self):
+		if self._url and self.is_enabled():
+			self._start_update_thread()
+
+	def _start_update_thread(self):
+		if self._thread:
+			self._logger.warn("_start_update_thread() thread object already present. skipping")
+			return
+
 		# determine port to use, first try discovery plugin, then our settings
 		port = self._get_setting([["plugins", "discovery", "publicPort"], ],
 		                         ["public", "port"],
-		                         default_value=port)
+		                         default_value=self._port)
 
 		# determine scheme (http/https) to use
 		scheme = self._get_setting([["plugins", "discovery", "publicScheme"], ],
@@ -158,6 +229,12 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 		                                            on_condition_false=self._on_disabled)
 		self._thread.start()
 
+	def _track_ping(self, referrer):
+		if self._lastPing <= 0:
+			self._logger.info("First ping received (referrer: %s)", flask.request.referrer)
+		self._lastPing = time.time()
+		self.update_frontend()
+
 	def _get_interval(self):
 		if self._client_seen:
 			interval = self._settings.get_float(["interval_client"])
@@ -165,15 +242,31 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 			interval = self._settings.get_float(["interval_noclient"])
 		return interval
 
+	def is_enabled(self):
+		return self._not_disabled()
+
 	def _not_disabled(self):
-		import os
-		for path in self._settings.get(["disable_if_exists"]):
-			if os.path.exists(path):
-				return False
-		return True
+		enabled = False
+		try:
+			enabled = self._settings.get(["enabled"])
+			if enabled:
+				import os
+				for path in self._settings.get(["disable_if_exists"]):
+					if os.path.exists(path):
+						enabled = False
+		except:
+			self._logger.exception("Exception in _not_disabled(): ")
+		return enabled
 
 	def _on_disabled(self, *args, **kwargs):
-		self._logger.info("Registration with FindMyMrBeam disabled.")
+		"""
+		found out that this one is never called, even if _not_disabled() returned False.
+		Not sure why, do not want to debug further atm
+		"""
+		try:
+			self._logger.info("Registration with FindMyMrBeam disabled.")
+		except:
+			self._logger.exception("Exception in _on_disabled(): ")
 
 	def _perform_update_request(self, uuid, scheme, port, path, http_user=None, http_password=None):
 		urls = []
@@ -217,6 +310,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.StartupPlugin,
 		except Exception as e:
 			response = -1
 			self._logger.warn("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
+		self._registered = time.time() if response == 200 else 0
+		self.update_frontend()
 
 		self._logger.info("Registration to FindMyMrBeam. response: %s - url candidates: %s" , response, urls)
 
