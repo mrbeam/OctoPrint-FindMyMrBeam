@@ -28,6 +28,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._registered = -1
 		self._lastPing = 0
 		self._public_ip = None
+		self._uuid = None
 
 		from random import choice
 		import string
@@ -143,10 +144,12 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			registered = True
 		ping = self._lastPing > 0
 		return dict(
+			name = self._find_name(),
+			uuid = self._uuid,
 			enabled=self._settings.get(['enabled']),
 			registered=registered,
 			ping=ping,
-			public_ip=self._public_ip
+			public_ip=self._public_ip,
 		)
 
 	def _find_name(self):
@@ -200,12 +203,12 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		                           default_value="http")
 
 		# determine uuid to use
-		uuid = self._get_setting([["plugins", "discovery", "upnpUuid"], ],
+		self._uuid = self._get_setting([["plugins", "discovery", "upnpUuid"], ],
 		                         ["public", "uuid"])
-		if uuid is None:
+		if self._uuid is None:
 			import uuid as u
-			uuid = str(u.uuid4())
-			self._settings.set(["public", "uuid"], uuid)
+			self._uuid = str(u.uuid4())
+			self._settings.set(["public", "uuid"], self._uuid)
 			self._settings.save()
 
 		# determine path to use
@@ -224,7 +227,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._logger.info("Registering with FindMyMrBeam at {}".format(self._url))
 		self._thread = octoprint.util.RepeatedTimer(self._get_interval,
 		                                            self._perform_update_request,
-		                                            args=(uuid, scheme, port, path),
+		                                            args=(self._uuid, scheme, port, path),
 		                                            kwargs=dict(http_user=http_user, http_password=http_password),
 		                                            run_first=True,
 		                                            condition=self._not_disabled,
@@ -312,6 +315,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 				body = r.json()
 			except ValueError as e:
 				self._logger.warn("Error while parsing JSON from response: %s", e)
+		except requests.ConnectionError as e:
+			status_code = -1
 		except Exception as e:
 			status_code = -1
 			self._logger.warn("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
