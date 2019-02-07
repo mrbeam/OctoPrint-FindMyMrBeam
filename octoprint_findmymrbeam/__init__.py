@@ -27,6 +27,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._client_seen = False
 		self._registered = -1
 		self._lastPing = 0
+		self._calls = []
 		self._public_ip = None
 		self._uuid = None
 
@@ -101,7 +102,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		if not self.is_enabled():
 			flask.abort(404)
 
-		self._track_ping(flask.request.referrer)
+		self._track_ping()
 
 		# send a transparent 1x1 px gif
 		import base64
@@ -234,9 +235,14 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		                                            on_condition_false=self._on_disabled)
 		self._thread.start()
 
-	def _track_ping(self, referrer):
-		if self._lastPing <= 0:
-			self._logger.info("First ping received (referrer: %s)", flask.request.referrer)
+	def _track_ping(self):
+		my_call = dict(host=flask.request.host,
+		               ref=flask.request.referrer,
+		               remote_ip=flask.request.headers.get("X-Forwarded-For"))
+		if not my_call in self._calls:
+			self._calls.append(my_call)
+			self._logger.info("First ping received from: %s", my_call)
+			self._logger.info("All unique pings: %s", self._calls)
 		self._lastPing = time.time()
 		self.update_frontend()
 
