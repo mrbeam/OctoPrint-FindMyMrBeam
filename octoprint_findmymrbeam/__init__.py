@@ -132,23 +132,28 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 	##~~ internal helpers
 
+	def is_registered(self):
+		registered = None
+		if self.is_enabled():
+			if self._registered == 0:
+				registered = False
+			elif self._registered > 0 and time.time() - self._registered <= (self._get_interval() * 1.2):
+				registered = True
+		else:
+			registered = False
+		return registered
+
 	def update_frontend(self):
 		payload = self.get_state_data()
 		self._plugin_manager.send_plugin_message("findmymrbeam", payload)
 
 	def get_state_data(self):
-		interval_thresh = self._get_interval() * 1, 5
-		registered = None
-		if self._registered == 0:
-			registered = False
-		elif self._registered > 0 and time.time() - self._registered <= interval_thresh:
-			registered = True
 		ping = self._lastPing > 0
 		return dict(
 			name = self._find_name(),
 			uuid = self._uuid,
 			enabled=self._settings.get(['enabled']),
-			registered=registered,
+			registered=self.is_registered(),
 			ping=ping,
 			public_ip=self._public_ip,
 		)
