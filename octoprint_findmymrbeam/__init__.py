@@ -25,7 +25,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._thread = None
 		self._url = None
 		self._client_seen = False
-		self._registered = -1
+		self._registered = None
 		self._lastPing = 0
 		self._calls = []
 		self._public_ip = None
@@ -133,15 +133,15 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	##~~ internal helpers
 
 	def is_registered(self):
-		registered = None
+		"""
+		Is device registered at find.mr-beam.org?
+		:return: Bool True if registered, False if registering failed or if feature is disabled, None if not registered yet
+		:rtype:
+		"""
 		if self.is_enabled():
-			if self._registered == 0:
-				registered = False
-			elif self._registered > 0 and time.time() - self._registered <= (self._get_interval() * 1.2):
-				registered = True
+			return self._registered
 		else:
-			registered = False
-		return registered
+			return False
 
 	def update_frontend(self):
 		payload = self.get_state_data()
@@ -333,7 +333,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			self._logger.warn("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
 
 		self._public_ip = body['remote_ip'] if body is not None and 'remote_ip' in body else None
-		self._registered = time.time() if status_code == 200 else 0
+		self._registered = (status_code == 200)
 		self.update_frontend()
 
 		if status_code == 200:
