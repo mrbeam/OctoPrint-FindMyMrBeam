@@ -11,6 +11,8 @@ import netaddr
 import time
 import socket
 
+from analytics import Analytics
+
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 
 class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
@@ -30,6 +32,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._calls = []
 		self._public_ip = None
 		self._uuid = None
+		self._analytics = None
 
 		from random import choice
 		import string
@@ -38,8 +41,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._not_so_secret = "ping_ap_mode"
 
 	def initialize(self):
+		self._analytics = Analytics(self)
 		self._url = self._settings.get(["url"])
 		self._logger.info("FindMyMrBeam enabled: %s", self.is_enabled())
+		self._analytics.log_enabled(self.is_enabled())
 		self.update_frontend()
 
 	##~~ SettingsPlugin
@@ -70,6 +75,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			enabled = bool(data["enabled"])
 			self._logger.info("User changed findmymrbeam enabled to: %s", enabled)
 			self._settings.set_boolean(["enabled"], enabled)
+			self._analytics.log_enabled(self.is_enabled())
 			self.start_findmymrbeam()
 
 	##~~ AssetPlugin mixin
@@ -249,6 +255,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			self._logger.info("First ping received from: %s", my_call)
 			self._logger.info("All unique pings: %s", self._calls)
 		self._lastPing = time.time()
+		self._analytics.log_pinged(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'])
 		self.update_frontend()
 
 	def _get_interval(self):
@@ -319,6 +326,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 		status_code = 0
 		body = None
+		err = None
 		try:
 			r = requests.post(self._url, json=data, headers=headers)
 			status_code = r.status_code
@@ -326,14 +334,17 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 				body = r.json()
 			except ValueError as e:
 				self._logger.warn("Error while parsing JSON from response: %s", e)
-		except requests.ConnectionError as e:
+		except requests.exceptions.RequestException as e:
+			err = 'requests.{}'.format(type(e).__name__)
 			status_code = -1
 		except Exception as e:
+			err = type(e).__name__
 			status_code = -1
-			self._logger.warn("Error while updating registration with FindMyMrBeam, Exception: %s", e.args)
+			self._logger.exception("Exception while updating registration with FindMyMrBeam, Exception: %s", e.args)
 
 		self._public_ip = body['remote_ip'] if body is not None and 'remote_ip' in body else None
 		self._registered = (status_code == 200)
+		self._analytics.log_registered(self._registered, status_code, err)
 		self.update_frontend()
 
 		if status_code == 200:
