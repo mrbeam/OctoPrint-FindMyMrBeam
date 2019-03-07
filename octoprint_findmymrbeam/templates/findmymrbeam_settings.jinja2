@@ -2,7 +2,7 @@
     <h3>{{ _('find.mr-beam.org') }}</h3>
 
     <form class="form-horizontal">
-        <div class="control-group">
+        <div class="control-group scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 100px);">
 {#            <label class="control-label" for="settings-debug-terminal">{{ _('find.mr-beam.org') }}</label>#}
             <div class="controls">
                 <label class="checkbox">
@@ -34,9 +34,45 @@
                 <p style="color: darkgray;font-size: 0.9em; margin-top:20px">
                     find.mr-beam.org <a href="/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf" target="_blank">privacy policy</a>.
                 </p>
+
             </div>
 
+            <p><br/></p>
 
+            <div style="width: 60%" class="controls">
+
+                <h5>{{ _("Mr Beam Status Light") }}</h5>
+
+{#                <p>While no user is connected Mr Beam II indicates how you can connect:</p>#}
+                <p>When the Mr Beam Status Light is breathing (light is moving up and down) <br/>
+                    a connection can be set up with your computer. <br/>
+                    There are three different ways to do so:</p>
+
+                <table style="width:100%; text-align:center;">
+                  <tr>
+                    <td colspan="3"><img id="wizard_whatsnew_mrb_lights_breathing_colors_img" src="/plugin/mrbeam/static/img/mrb_light_breathing_colors.gif"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Breathing Orange:</strong></td>
+                    <td><strong>Breathing Green:</strong></td>
+                    <td><strong>Breathing White:</strong></td>
+                  </tr>
+                  <tr>
+                    <td>find.mr-beam.org</td>
+                    <td>WiFi Access Point</td>
+                    <td>In your network</td>
+                  </tr>
+                </table>
+
+                <p><br/></p>
+
+                <p>
+                    Check out our knowledge base article: <br/>
+                    <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000488947-mr-beam-status-light-tells-you-how-to-connect/preview" target="_blank">Mr Beam Status Light tells you how to connect</a>.
+                </p>
+                <p><br/></p>
+
+            </div>
 
         </div>
     </form>
