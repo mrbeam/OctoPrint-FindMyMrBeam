@@ -8,11 +8,13 @@ $(function () {
         self.registered = ko.observable(null);
         self.ping = ko.observable(false);
         self.public_ip = ko.observable(null);
+        self.public_ip6 = ko.observable(null);
         self.find_url = ko.computed(function(){
             return "https://find.mr-beam.org"
                 +"?name=" + encodeURIComponent(self.name())
                 +"&uuid=" + encodeURIComponent(self.uuid())
                 +"&public_ip=" + encodeURIComponent(self.public_ip())
+                +"&public_ip6=" + encodeURIComponent(self.public_ip6())
                 ;
         });
 
@@ -40,6 +42,9 @@ $(function () {
             }
             if ('public_ip' in data) {
                 self.public_ip(data['public_ip']);
+            }
+            if ('public_ip6' in data) {
+                self.public_ip6(data['public_ip6']);
             }
         };
 

@@ -1,13 +1,12 @@
 <div id="settings_findmymrbeam">
-    <h3>{{ _('find.mr-beam.org') }}</h3>
+    <h3>{{ _('find.mr-beam') }}</h3>
 
     <form class="form-horizontal">
         <div class="control-group scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
-{#            <label class="control-label" for="settings-debug-terminal">{{ _('find.mr-beam.org') }}</label>#}
             <div class="controls">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: settings.settings.plugins.findmymrbeam.enabled">
-                    <strong>Enable find.mr-beam.org</strong>
+                    <strong>Enable find.mr-beam service</strong>
                 </label>
 
                 <div data-bind="visible: settings.settings.plugins.findmymrbeam.enabled" style="width: 530px">
@@ -28,11 +27,11 @@
 
                  <div data-bind="visible: !settings.settings.plugins.findmymrbeam.enabled()" style="width: 530px">
                     <div><span><strong>State:</strong> Disabled</span></div>
-                    <div><span><strong>WARNING:</strong> Mr Beam II can not be found on find.mr-beam.org.</span></div>
+                    <div><span><strong>WARNING:</strong> Mr Beam II can not be found on find.mr-beam service.</span></div>
                 </div>
                 <div></div>
                 <p style="color: darkgray;font-size: 0.9em; margin-top:20px">
-                    find.mr-beam.org <a href="/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf" target="_blank">privacy policy</a>.
+                    find.mr-beam service <a href="/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf" target="_blank">privacy policy</a>.
                 </p>
 
             </div>
@@ -58,8 +57,8 @@
                     <td><strong>Breathing White:</strong></td>
                   </tr>
                   <tr>
-                    <td>find.mr-beam.org</td>
-                    <td>WiFi Access Point</td>
+                    <td>find.mr-beam service</td>
+                    <td>WiFi access point</td>
                     <td>In your network</td>
                   </tr>
                 </table>

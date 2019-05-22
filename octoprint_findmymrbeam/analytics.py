@@ -29,12 +29,14 @@ class Analytics(object):
 		except:
 			self._logger.exception("Exception while writing enabled state to analytics.")
 
-	def log_registered(self, succ, status_code, err=None):
+	def log_registered(self, succ, ip4_status_code, ip6_status_code, ip4_err=None, ip6_err=None):
 		try:
 			data = dict(
 				succ = succ,
-				status_code = status_code,
-				err = err
+				status_code_ip4 = ip4_status_code,
+				status_code_ip6 = ip6_status_code,
+				err_ip4 = ip4_err,
+				err_ip6 = ip6_err,
 			)
 			if data != self._last_registered:
 				self._last_registered = data
