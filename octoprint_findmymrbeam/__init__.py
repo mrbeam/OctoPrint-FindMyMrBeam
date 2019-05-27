@@ -299,6 +299,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def _perform_update_request(self, uuid, scheme, port, path, http_user=None, http_password=None):
 		try:
 			urls = []
+			local_ips = []
 
 			def compile_url(addr):
 				return self._compile_url(scheme,
@@ -313,6 +314,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 				if netaddr.IPAddress(addr) in LOCALHOST:
 					continue
 
+				if addr not in ("10.250.250.1",):
+					local_ips.append(addr)
 				urls.append(compile_url(addr))
 
 			hostname = socket.gethostname()
@@ -326,6 +329,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			            name=self._find_name(),
 			            color=self._find_color(),
 			            urls=urls,
+			            local_ips=local_ips,
 			            query="plugin/{}/{}".format(self._identifier, self._secret))
 
 			headers = {"User-Agent": "OctoPrint-FindMyMrBeam/{}".format(self._plugin_version)}
