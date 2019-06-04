@@ -12,6 +12,7 @@ import time
 import socket
 
 from analytics import Analytics
+from __version import __version__
 
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 
@@ -42,7 +43,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		import string
 		chars = string.ascii_lowercase + string.ascii_uppercase + string.digits
 		self._secret = "".join(choice(chars) for _ in range(32))
-		self._not_so_secret = "ping_ap_mode"
+		self._not_so_secret = ["ping_ap_mode", "find_mrbeam_ping"]
+		self._all_secrets = self._not_so_secret + [self._secret]
 
 	def initialize(self):
 		self._analytics = Analytics(self)
@@ -106,7 +108,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/<secret>.gif", methods=["GET"])
 	def is_online_gif(self, secret):
 
-		if secret not in (self._secret, self._not_so_secret):
+		if secret not in self._all_secrets:
 			flask.abort(404)
 
 		if not self.is_enabled():
@@ -298,16 +300,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 	def _perform_update_request(self, uuid, scheme, port, path, http_user=None, http_password=None):
 		try:
-			urls = []
 			local_ips = []
-
-			def compile_url(addr):
-				return self._compile_url(scheme,
-				                         addr,
-				                         port,
-				                         path,
-				                         http_user=http_user,
-				                         http_password=http_password)
 
 			# all ips
 			for addr in octoprint.util.interface_addresses():
@@ -316,19 +309,14 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 				if addr not in ("10.250.250.1",):
 					local_ips.append(addr)
-				urls.append(compile_url(addr))
 
 			hostname = socket.gethostname()
 
-			urls = [compile_url(hostname + ".local"),
-			        compile_url(hostname + ".fritz.box"),
-			        compile_url(hostname)]\
-			       + sorted(urls)
-
-			data = dict(uuid=uuid,
+			data = dict(_version=__version__,
+						uuid=uuid,
 			            name=self._find_name(),
+			            hostname = hostname,
 			            color=self._find_color(),
-			            urls=urls,
 			            local_ips=local_ips,
 			            query="plugin/{}/{}".format(self._identifier, self._secret))
 
@@ -344,8 +332,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			self.update_frontend()
 
 			if ip4_status_code == 200 or ip6_status_code == 200:
-				self._logger.info("FindMyMrBeam registration: OK  - ip4_status_code: %s, public_ip: %s, ip6_status_code: %s, public_ip6: %s, url candidates: %s" ,
-				                  ip4_status_code, self._public_ip, ip6_status_code, self._public_ip6, urls)
+				self._logger.info("FindMyMrBeam registration: OK  - ip4_status_code: %s, public_ip: %s, ip6_status_code: %s, public_ip6: %s, hostname: %s, local_ips: %s" ,
+				                  ip4_status_code, self._public_ip, ip6_status_code, self._public_ip6, hostname, local_ips)
 			else:
 				self._logger.info("FindMyMrBeam registration: ERR - ip4_status_code: %s, ip6_status_code: %s", ip4_status_code, ip6_status_code)
 		except:
@@ -432,16 +420,6 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		return [response
 		        for response in responses
 		        if response[0] == socket.AF_INET6]
-
-	@staticmethod
-	def _compile_url(scheme, host, port, path, http_user=None, http_password=None):
-		prefix = ""
-		if http_user is not None:
-			if http_password is not None:
-				prefix = "{}:{}@".format(http_user, http_password)
-			else:
-				prefix = "{}@".format(http_user)
-		return "{}://{}{}:{}{}".format(scheme, prefix, host, port, path)
 
 
 __plugin_name__ = "FindMyMrBeam"
