@@ -1,5 +1,9 @@
 # coding=utf-8
 
+
+execfile('octoprint_findmymrbeam/__version.py')
+
+
 ########################################################################################################################
 ### Do not forget to adjust the following variables to your own plugin.
 
@@ -14,7 +18,7 @@ plugin_package = "octoprint_findmymrbeam"
 plugin_name = "OctoPrint-FindMyMrBeam"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.2.1"
+plugin_version = __version__
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
