@@ -6,32 +6,32 @@
             <div class="controls">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: settings.settings.plugins.findmymrbeam.enabled">
-                    <strong>Enable find.mr-beam service</strong>
+                    <strong>{{ _('Enable find.mr-beam service') }}</strong>
                 </label>
 
                 <div data-bind="visible: settings.settings.plugins.findmymrbeam.enabled" style="width: 530px">
                     <div>
-                        <strong>State:</strong>
+                        <strong>{{ _('State') }}:</strong>
                         <span data-bind="visible: registered() && ping()">
-                            Registered and verified: Service works in your network.</span>
+                            {{ _('Registered and verified: Service works in your network.') }}</span>
                         <span data-bind="visible: registered() && !ping()">
-                            Registered - <a data-bind="attr: { href: find_url }" target="_blank">Try it</a>
-                            to verify functionality in your network.</span>
-                        <span data-bind="visible: registered() == false">Unable to register. Check Internet connection of Mr Beam II.</span>
-                        <span data-bind="visible: registered() == null">Registering...</span>
+                            {{ _('Registered - <a data-bind="attr: { href: find_url }" target="_blank">Try it</a>
+                            to verify functionality in your network.') }}</span>
+                        <span data-bind="visible: registered() == false">{{ _('Unable to register. Check Internet connection of Mr Beam II.') }}</span>
+                        <span data-bind="visible: registered() == null">{{ _('Registering...') }}</span>
                     </div>
                     <div data-bind="visible: settings.settings.plugins.findmymrbeam.enabled() && registered()">
-                        <strong>Try it:</strong> <a data-bind="attr: { href: find_url }" target="_blank" >find.mr-beam.org</a>
+                        <strong>{{ _('Try it') }}:</strong> <a data-bind="attr: { href: find_url }" target="_blank" >{{ _('find.mr-beam.org') }}</a>
                     </div>
                 </div>
 
                  <div data-bind="visible: !settings.settings.plugins.findmymrbeam.enabled()" style="width: 530px">
-                    <div><span><strong>State:</strong> Disabled</span></div>
-                    <div><span><strong>WARNING:</strong> Mr Beam II can not be found on find.mr-beam service.</span></div>
+                    <div><span><strong>{{ _('State') }}:</strong> {{ _('Disabled') }}</span></div>
+                    <div><span><strong>{{ _('WARNING') }}:</strong> {{ _('Mr Beam II can not be found on find.mr-beam service.') }}</span></div>
                 </div>
                 <div></div>
                 <p style="color: darkgray;font-size: 0.9em; margin-top:20px">
-                    find.mr-beam service <a href="/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf" target="_blank">privacy policy</a>.
+                    {{ _('find.mr-beam service') }} <a href={{ _("/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf") }} target="_blank">{{ _('privacy policy') }}</a>.
                 </p>
 
             </div>
@@ -40,34 +40,34 @@
 
             <div style="width: 60%" class="controls">
 
-                <h5>{{ _("Mr Beam Status Light") }}</h5>
+                <h5>{{ _('Mr Beam Status Light') }}</h5>
 
 {#                <p>While no user is connected Mr Beam II indicates how you can connect:</p>#}
-                <p>When the Mr Beam Status Light is breathing (light is moving up and down) <br/>
-                    a connection can be set up with your computer. <br/>
-                    There are three different ways to do so:</p>
+                <p>{{ _('When the Mr Beam Status Light is breathing (light is moving up and down) <br/>
+                    a connection can be set up with your computer.') }} <br/>
+                    {{ _('There are three different ways to do so') }}:</p>
 
                 <table style="width:100%; text-align:center;">
                   <tr>
                     <td colspan="3"><img id="wizard_whatsnew_mrb_lights_breathing_colors_img" src="/plugin/mrbeam/static/img/mrb_light_breathing_colors.gif"></td>
                   </tr>
                   <tr>
-                    <td><strong>Breathing Orange:</strong></td>
-                    <td><strong>Breathing Green:</strong></td>
-                    <td><strong>Breathing White:</strong></td>
+                    <td><strong>{{ _('Breathing Orange') }}:</strong></td>
+                    <td><strong>{{ _('Breathing Green') }}:</strong></td>
+                    <td><strong>{{ _('Breathing White') }}:</strong></td>
                   </tr>
                   <tr>
-                    <td>find.mr-beam service</td>
-                    <td>WiFi access point</td>
-                    <td>In your network</td>
+                    <td>{{ _('find.mr-beam service') }}</td>
+                    <td>{{ _('WiFi access point') }}</td>
+                    <td>{{ _('In your network') }}</td>
                   </tr>
                 </table>
 
                 <p><br/></p>
 
                 <p>
-                    Check out our knowledge base article: <br/>
-                    <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000488947-mr-beam-status-light-tells-you-how-to-connect/preview" target="_blank">Mr Beam Status Light tells you how to connect</a>.
+                    {{ _('Check out our knowledge base article') }}: <br/>
+                    <a href={{ _("https://mr-beam.freshdesk.com/en/support/solutions/articles/43000488947-mr-beam-status-light-tells-you-how-to-connect/preview") }} target="_blank">{{ _('Mr Beam Status Light tells you how to connect') }}</a>.
                 </p>
                 <p><br/></p>
 
