@@ -1,0 +1,133 @@
+# Translations template for PROJECT.
+# Copyright (C) 2019 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2019-06-14 16:29+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.6.0\n"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:2
+msgid "find.mr-beam"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:9
+msgid "Enable find.mr-beam service"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:14
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:29
+msgid "State"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:16
+msgid "Registered and verified: Service works in your network."
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:18
+msgid ""
+"Registered - <a data-bind=\"attr: { href: find_url }\" "
+"target=\"_blank\">Try it</a>\n"
+"                            to verify functionality in your network."
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:20
+msgid "Unable to register. Check Internet connection of Mr Beam II."
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:21
+msgid "Registering..."
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:24
+msgid "Try it"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:24
+msgid "find.mr-beam.org"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:29
+msgid "Disabled"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:30
+msgid "WARNING"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:30
+msgid "Mr Beam II can not be found on find.mr-beam service."
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:34
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:60
+msgid "find.mr-beam service"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:34
+msgid "/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:34
+msgid "privacy policy"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:43
+msgid "Mr Beam Status Light"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:46
+msgid ""
+"When the Mr Beam Status Light is breathing (light is moving up and down) "
+"<br/>\n"
+"                    a connection can be set up with your computer."
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:48
+msgid "There are three different ways to do so"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:55
+msgid "Breathing Orange"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:56
+msgid "Breathing Green"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:57
+msgid "Breathing White"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:61
+msgid "WiFi access point"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:62
+msgid "In your network"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:69
+msgid "Check out our knowledge base article"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70
+msgid ""
+"https://mr-beam.freshdesk.com/en/support/solutions/articles/43000488947"
+"-mr-beam-status-light-tells-you-how-to-connect/preview"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70
+msgid "Mr Beam Status Light tells you how to connect"
+msgstr ""
+
