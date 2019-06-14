@@ -1,6 +1,7 @@
 $(function () {
     function FindmymrbeamSettingsViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels['findmymrbeamSettingsViewModel'] = self;
         self.settings = params[0];
 
         self.name = ko.observable(null);
@@ -17,13 +18,22 @@ $(function () {
                 +"&public_ip6=" + encodeURIComponent(self.public_ip6())
                 ;
         });
-
+        self.verified = ko.observable(false);
+        self.verification_response = null;
 
         self.onAllBound = function () {
             self.name(self.settings.settings.plugins.findmymrbeam.name());
             self.uuid(self.settings.settings.plugins.findmymrbeam.uuid());
             self.registered(self.settings.settings.plugins.findmymrbeam.registered());
             self.ping(self.settings.settings.plugins.findmymrbeam.ping());
+        };
+
+        self.onStartupComplete = function () {
+            self.verifyByFrontend();
+        };
+
+        self.onSettingsShown = function () {
+            self.verifyByFrontend();
         };
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
@@ -45,6 +55,29 @@ $(function () {
             }
             if ('public_ip6' in data) {
                 self.public_ip6(data['public_ip6']);
+            }
+            self.verifyByFrontend();
+        };
+
+        self.verifyByFrontend = function() {
+            if (self.registered()) {
+                let registryUrl = "http://find.mr-beam.org/verify";
+                let requestData = {
+                    uuid: self.uuid(),
+                    frontendHost: document.location.host
+                }
+                $.get(registryUrl, requestData)
+                    .done(function (response) {
+                        self.verified(response['verified'] || false);
+                        self.verification_response = response
+                    })
+                    .fail(function () {
+                        self.verified(false);
+                        self.verification_response = null;
+
+                    })
+            } else {
+                self.verified(false);
             }
         };
 

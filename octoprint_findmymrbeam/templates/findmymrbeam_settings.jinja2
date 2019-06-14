@@ -12,9 +12,9 @@
                 <div data-bind="visible: settings.settings.plugins.findmymrbeam.enabled" style="width: 530px">
                     <div>
                         <strong>State:</strong>
-                        <span data-bind="visible: registered() && ping()">
+                        <span data-bind="visible: registered() && (ping() || verified())">
                             Registered and verified: Service works in your network.</span>
-                        <span data-bind="visible: registered() && !ping()">
+                        <span data-bind="visible: registered() && !(ping() || verified())">
                             Registered - <a data-bind="attr: { href: find_url }" target="_blank">Try it</a>
                             to verify functionality in your network.</span>
                         <span data-bind="visible: registered() == false">Unable to register. Check Internet connection of Mr Beam II.</span>
