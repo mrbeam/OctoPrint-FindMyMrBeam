@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-06-14 16:29+0200\n"
+"POT-Creation-Date: 2019-06-26 15:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -119,12 +119,6 @@ msgstr ""
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:69
 msgid "Check out our knowledge base article"
-msgstr ""
-
-#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70
-msgid ""
-"https://mr-beam.freshdesk.com/en/support/solutions/articles/43000488947"
-"-mr-beam-status-light-tells-you-how-to-connect/preview"
 msgstr ""
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-06-14 16:29+0200\n"
-"PO-Revision-Date: 2019-06-14 16:54+0200\n"
+"POT-Creation-Date: 2019-06-26 15:43+0200\n"
+"PO-Revision-Date: 2019-06-26 15:45+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -57,8 +57,7 @@ msgstr "Registrándose...."
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:24
 msgid "Try it"
-msgstr ""
-"La versión de iobeam está desactualizada. Por favor, actualiza el software"
+msgstr "Pruébalo"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:24
 msgid "find.mr-beam.org"
@@ -131,11 +130,5 @@ msgid "Check out our knowledge base article"
 msgstr "Echa un vistazo a nuestro artículo de la Knowledge Base"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70
-msgid ""
-"https://mr-beam.freshdesk.com/en/support/solutions/articles/43000488947-mr-"
-"beam-status-light-tells-you-how-to-connect/preview"
-msgstr ""
-
-#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70
 msgid "Mr Beam Status Light tells you how to connect"
-msgstr ""
+msgstr "Las Luces de Estado de Mr Beam te indican cómo conectarte"
