@@ -1,0 +1,134 @@
+# Translations template for PROJECT.
+# Copyright (C) 2019 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2019-06-26 15:43+0200\n"
+"PO-Revision-Date: 2019-06-26 16:24+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.6.0\n"
+"X-Generator: Poedit 2.2.3\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:2
+msgid "find.mr-beam"
+msgstr "find.mr-beam"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:9
+msgid "Enable find.mr-beam service"
+msgstr "Habilitar el servicio find.mr-beam"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:14
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:29
+msgid "State"
+msgstr "Estado"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:16
+msgid "Registered and verified: Service works in your network."
+msgstr "Registrado y verificado: El servicio funciona en tu red."
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:18
+msgid ""
+"Registered - <a data-bind=\"attr: { href: find_url }\" target=\"_blank\">Try "
+"it</a>\n"
+"                            to verify functionality in your network."
+msgstr ""
+"Registrado - <a data-bind=\"attr: { href: find_url }\" target=\"_blank"
+"\">Pruébalo</a>\n"
+"                            para verificar la funcionalidad de tu red."
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:20
+msgid "Unable to register. Check Internet connection of Mr Beam II."
+msgstr ""
+"No se ha podido registrar. Comprueba la conexión a Internet del Mr Beam II."
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:21
+msgid "Registering..."
+msgstr "Registrándose...."
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:24
+msgid "Try it"
+msgstr "Pruébalo"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:24
+msgid "find.mr-beam.org"
+msgstr "find.mr-beam.org"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:29
+msgid "Disabled"
+msgstr "Deshabilitado"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:30
+msgid "WARNING"
+msgstr "ATENCIÓN"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:30
+msgid "Mr Beam II can not be found on find.mr-beam service."
+msgstr "No se ha podido encontrar tu Mr Beam II en el servicio find.mr-beam."
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:34
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:60
+msgid "find.mr-beam service"
+msgstr "Servicio find.mr-beam"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:34
+msgid "/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf"
+msgstr ""
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:34
+msgid "privacy policy"
+msgstr "política de privacidad"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:43
+msgid "Mr Beam Status Light"
+msgstr "Luces de Estado de Mr Beam"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:46
+msgid ""
+"When the Mr Beam Status Light is breathing (light is moving up and down) <br/"
+">\n"
+"                    a connection can be set up with your computer."
+msgstr ""
+"Cuando la luz de estado Mr Beam está \"respirando\" (la luz se mueve hacia "
+"arriba y hacia abajo) se puede establecer una conexión con el ordenador."
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:48
+msgid "There are three different ways to do so"
+msgstr "Hay tres maneras diferentes de hacerlo"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:55
+msgid "Breathing Orange"
+msgstr "Respiración Naranja"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:56
+msgid "Breathing Green"
+msgstr "Respiración verde"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:57
+msgid "Breathing White"
+msgstr "Respiración Blanca"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:61
+msgid "WiFi access point"
+msgstr "Punto de acceso WiFi"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:62
+msgid "In your network"
+msgstr "En tu red"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:69
+msgid "Check out our knowledge base article"
+msgstr "Echa un vistazo a nuestro artículo de la Knowledge Base"
+
+#: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70
+msgid "Mr Beam Status Light tells you how to connect"
+msgstr "Las Luces de Estado de Mr Beam te indican cómo conectarte"
