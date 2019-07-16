@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-06-26 15:43+0200\n"
-"PO-Revision-Date: 2019-07-12 13:42+0200\n"
+"PO-Revision-Date: 2019-07-16 12:12+0200\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -25,7 +25,7 @@ msgstr "find.mr-beam"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:9
 msgid "Enable find.mr-beam service"
-msgstr "find.mr-beam-Dienst aktivieren"
+msgstr "Aktiviere find.mr-beam-Dienst"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:14
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:29
@@ -122,7 +122,7 @@ msgstr "Weiß atmend"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:61
 msgid "WiFi access point"
-msgstr "WLAN-Zugangspunkt"
+msgstr "WLAN-Access-Point"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:62
 msgid "In your network"
@@ -130,7 +130,7 @@ msgstr "In Deinem Netzwerk"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:69
 msgid "Check out our knowledge base article"
-msgstr "Lies unseren Knowledge Base-Artikel"
+msgstr "Weitere Informationen findest Du in unserem Knowledge Base-Artikel"
 
 #: octoprint_findmymrbeam/templates/findmymrbeam_settings.jinja2:70
 msgid "Mr Beam Status Light tells you how to connect"
