@@ -1,5 +1,5 @@
 $(function () {
-    const FRONTEND_VERIFIED = 'frontend_verified';
+    const FRONTEND_VERIFIED = 'findmrbeam_verified';
 
     function FindmymrbeamSettingsViewModel(params) {
         var self = this;
