@@ -4,6 +4,7 @@
 import octoprint.plugin
 import octoprint.util
 import octoprint.events
+from octoprint.server import NO_CONTENT
 
 import flask
 import requests
@@ -19,6 +20,7 @@ LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						 octoprint.plugin.StartupPlugin,
 						 octoprint.plugin.SettingsPlugin,
+						 octoprint.plugin.SimpleApiPlugin,
 						 octoprint.plugin.BlueprintPlugin,
 						 octoprint.plugin.EventHandlerPlugin,
 						 octoprint.plugin.TemplatePlugin):
@@ -122,6 +124,23 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		response.headers["Content-Type"] = "image/gif"
 		return response
 
+	##~~ SimpleApiPlugin mixin
+
+	def get_api_commands(self):
+		return dict(
+			analytics_data=['event', 'payload'],  # analytics data from the frontend
+		)
+
+	def on_api_command(self, command, data):
+		if command == "analytics_data":
+			return self.analytics_data(data)
+		return NO_CONTENT
+
+	def analytics_data(self, data):
+		event = data.get('event')
+		payload = data.get('payload', dict())
+		self._analytics.log_frontend_event(event, payload)
+		return NO_CONTENT
 
 	##~~ EventHandlerPlugin
 

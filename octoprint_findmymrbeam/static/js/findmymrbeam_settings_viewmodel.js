@@ -1,4 +1,6 @@
 $(function () {
+    const FRONTEND_VERIFIED = 'frontend_verified';
+
     function FindmymrbeamSettingsViewModel(params) {
         var self = this;
         window.mrbeam.viewModels['findmymrbeamSettingsViewModel'] = self;
@@ -65,23 +67,42 @@ $(function () {
                 let requestData = {
                     uuid: self.uuid(),
                     frontendHost: document.location.host
-                }
+                };
+                let status = null;
                 $.get(registryUrl, requestData)
-                    .done(function (response) {
+                    .done(function (response, textStatus, jqXHR) {
                         self.verified(response['verified'] || false);
-                        self.verification_response = response
+                        self.verification_response = response;
+                        status = jqXHR.status;
                     })
-                    .fail(function () {
+                    .fail(function (jqXHR) {
                         self.verified(false);
                         self.verification_response = null;
-
+                        status = jqXHR.status;
+                    })
+                    .always(function () {
+                        let payload = {
+                            verified: self.verified(),
+                            status: status
+                        };
+                        self.send_fontend_event(FRONTEND_VERIFIED, payload)
                     })
             } else {
                 self.verified(false);
             }
         };
 
+        self.send_fontend_event = function (event, payload) {
+            return self._send(event, payload);
+        };
 
+        self._send = function (event, payload) {
+            let data = {
+                event: event,
+                payload: payload || {}
+            };
+            return OctoPrint.simpleApiCommand("findmymrbeam", "analytics_data", data);
+        }
     }
 
     // view model class, parameters for constructor, container to bind to
