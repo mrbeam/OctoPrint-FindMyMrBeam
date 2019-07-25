@@ -83,7 +83,7 @@ $(function () {
                     .always(function () {
                         let payload = {
                             verified: self.verified(),
-                            status: status
+                            status_code: status
                         };
                         self.send_fontend_event(FRONTEND_VERIFIED, payload)
                     })
