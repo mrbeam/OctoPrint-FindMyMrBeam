@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 class Analytics(object):
 
 	ANALYTICS_DATA =    "MrbAnalyticsData"
@@ -19,6 +13,7 @@ class Analytics(object):
 
 		self._last_registered = None
 		self._known_pings = []
+		self._known_frontend_events = []
 
 	def log_enabled(self, enabled):
 		try:
@@ -29,12 +24,14 @@ class Analytics(object):
 		except:
 			self._logger.exception("Exception while writing enabled state to analytics.")
 
-	def log_registered(self, succ, status_code, err=None):
+	def log_registered(self, succ, ip4_status_code, ip6_status_code, ip4_err=None, ip6_err=None):
 		try:
 			data = dict(
 				succ = succ,
-				status_code = status_code,
-				err = err
+				status_code_ip4 = ip4_status_code,
+				status_code_ip6 = ip6_status_code,
+				err_ip4 = ip4_err,
+				err_ip6 = ip6_err,
 			)
 			if data != self._last_registered:
 				self._last_registered = data
@@ -55,6 +52,17 @@ class Analytics(object):
 		except:
 			self._logger.exception("Exception while writing pinged state to analytics.")
 
+	def log_frontend_event(self, event, payload):
+		try:
+			data = dict(
+				event=event,
+				payload=payload,
+			)
+			if data not in self._known_frontend_events:
+				self._known_frontend_events.append(data)
+				self._send_op_event(eventname=event, data=payload)
+		except:
+			self._logger.exception("Exception while writing frontend event to analytics.")
 
 	def _send_op_event(self, eventname, data):
 		payload =dict(
