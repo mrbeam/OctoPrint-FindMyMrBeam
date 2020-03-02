@@ -11,11 +11,13 @@ import requests
 import netaddr
 import time
 import socket
+import os
 
 from analytics import Analytics
 from __version import __version__
 
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
+SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
 
 class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						 octoprint.plugin.StartupPlugin,
@@ -40,6 +42,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._public_ip6 = None
 		self._uuid = None
 		self._analytics = None
+		self._support_mode = False
 
 		from random import choice
 		import string
@@ -51,6 +54,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def initialize(self):
 		self._analytics = Analytics(self)
 		self._url = self._settings.get(["url"])
+		self._support_mode = os.path.isfile(SUPPORT_STICK_FILE_PATH)
 		self._logger.info("FindMyMrBeam enabled: %s", self.is_enabled())
 		self._analytics.log_enabled(self.is_enabled())
 		self.update_frontend()
@@ -337,6 +341,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			            hostname = hostname,
 			            color=self._find_color(),
 			            local_ips=local_ips,
+						support_mode=self._support_mode,
 			            query="plugin/{}/{}".format(self._identifier, self._secret))
 
 			headers = {"User-Agent": "OctoPrint-FindMyMrBeam/{}".format(self._plugin_version)}
@@ -351,8 +356,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			self.update_frontend()
 
 			if ip4_status_code == 200 or ip6_status_code == 200:
-				self._logger.info("FindMyMrBeam registration: OK  - ip4_status_code: %s, public_ip: %s, ip6_status_code: %s, public_ip6: %s, hostname: %s, local_ips: %s" ,
-				                  ip4_status_code, self._public_ip, ip6_status_code, self._public_ip6, hostname, local_ips)
+				self._logger.info(
+					"FindMyMrBeam registration: OK  - ip4_status_code: %s, public_ip: %s, ip6_status_code: %s, "
+					"public_ip6: %s, hostname: %s, local_ips: %s, support_mode: %s",
+					ip4_status_code, self._public_ip, ip6_status_code, self._public_ip6, hostname, local_ips, self._support_mode)
 			else:
 				self._logger.info("FindMyMrBeam registration: ERR - ip4_status_code: %s, ip6_status_code: %s", ip4_status_code, ip6_status_code)
 		except:
