@@ -76,7 +76,11 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		                        port=None,
 		                        path=None,
 		                        httpUser=None,
-		                        httpPass=None))
+		                        httpPass=None),
+		            dev=dict(
+			            is_mrb_office=False,
+			            hide=False,
+		            ))
 
 
 	def on_settings_load(self):
@@ -192,6 +196,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			ping=ping,
 			public_ip=self._public_ip,
 			public_ip6=self._public_ip6,
+			dev=self._settings.get(['dev']),
 		)
 
 	def _find_name(self):
@@ -343,6 +348,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			            local_ips=local_ips,
 						support_mode=self._support_mode,
 			            query="plugin/{}/{}".format(self._identifier, self._secret))
+
+			if (self._settings.get(['dev', 'is_mrb_office']) or self._settings.get(['dev', 'hide'])):
+				data['dev'] = self._settings.get(['dev'])
+				self._logger.info("FindMyMrBeam registration: Sending data incl dev data: %s", data)
 
 			headers = {"User-Agent": "OctoPrint-FindMyMrBeam/{}".format(self._plugin_version)}
 
