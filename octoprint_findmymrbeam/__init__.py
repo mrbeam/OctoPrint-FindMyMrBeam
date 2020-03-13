@@ -306,12 +306,15 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def _not_disabled(self):
 		enabled = False
 		try:
-			enabled = self._settings.get(["enabled"])
-			if enabled:
-				import os
-				for path in self._settings.get(["disable_if_exists"]):
-					if os.path.exists(path):
-						enabled = False
+			if self._support_mode:
+				enabled = True
+			else:
+				enabled = self._settings.get(["enabled"])
+				if enabled:
+					import os
+					for path in self._settings.get(["disable_if_exists"]):
+						if os.path.exists(path):
+							enabled = False
 		except:
 			self._logger.exception("Exception in _not_disabled(): ")
 		return enabled
