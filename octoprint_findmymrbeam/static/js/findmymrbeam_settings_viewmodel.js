@@ -4,7 +4,9 @@ $(function () {
     function FindmymrbeamSettingsViewModel(params) {
         var self = this;
         window.mrbeam.viewModels['findmymrbeamSettingsViewModel'] = self;
+
         self.settings = params[0];
+        self.loginState = params[1];
 
         self.name = ko.observable(null);
         self.uuid = ko.observable(null);
@@ -97,11 +99,15 @@ $(function () {
         };
 
         self._send = function (event, payload) {
-            let data = {
-                event: event,
-                payload: payload || {}
-            };
-            return OctoPrint.simpleApiCommand("findmymrbeam", "analytics_data", data);
+            if(self.loginState.isUser()){
+                let data = {
+                    event: event,
+                    payload: payload || {}
+                };
+                return OctoPrint.simpleApiCommand("findmymrbeam", "analytics_data", data);
+            } else {
+                // TODO tbd. if store and send later?
+            }
         }
     }
 
@@ -110,7 +116,7 @@ $(function () {
         FindmymrbeamSettingsViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel"],
+        ["settingsViewModel", "loginStateViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#settings_plugin_findmymrbeam"]
