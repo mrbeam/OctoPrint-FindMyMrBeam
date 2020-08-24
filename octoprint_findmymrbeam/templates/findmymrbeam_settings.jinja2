@@ -3,7 +3,7 @@
 
     <form class="form-horizontal">
         <div class="control-group scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
-            <div class="controls">
+            <div>
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: settings.settings.plugins.findmymrbeam.enabled">
                     <strong>{{ _('Enable find.mr-beam service') }}</strong>
@@ -38,16 +38,15 @@
 
             <p><br/></p>
 
-            <div style="width: 60%" class="controls">
+            <div>
 
                 <h5>{{ _('Mr Beam Status Light') }}</h5>
 
 {#                <p>While no user is connected Mr Beam II indicates how you can connect:</p>#}
-                <p>{{ _('When the Mr Beam Status Light is breathing (light is moving up and down) <br/>
-                    a connection can be set up with your computer.') }} <br/>
+                <p>{{ _('When the Mr Beam Status Light is breathing (light is moving up and down) a connection can be set up with your computer.') }} <br/>
                     {{ _('There are three different ways to do so') }}:</p>
 
-                <table style="width:100%; text-align:center;">
+                <table style="width:70%; text-align:center;">
                   <tr>
                     <td colspan="3"><img id="wizard_whatsnew_mrb_lights_breathing_colors_img" src="/plugin/mrbeam/static/img/mrb_light_breathing_colors.gif"></td>
                   </tr>
