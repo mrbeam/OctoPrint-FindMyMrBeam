@@ -338,8 +338,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 				if netaddr.IPAddress(addr) in LOCALHOST:
 					continue
 
-				if addr not in ("10.250.250.1",):
-					local_ips.append(addr)
+				# if addr not in ("10.250.250.1",):
+				local_ips.append(addr)
 
 			hostname = socket.gethostname()
 
@@ -373,11 +373,12 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					"public_ip6: %s, hostname: %s, local_ips: %s, support_mode: %s",
 					(ip4_status_code if ip4_status_code > 0 else ip4_err), self._public_ip,
 					(ip6_status_code if ip6_status_code > 0 else ip6_err), self._public_ip6,
-					hostname, local_ips, self._support_mode)
+					hostname, ", ".join(local_ips), self._support_mode)
 			else:
-				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s",
+				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s, hostname: %s, local_ips: %s",
 								  (ip4_status_code if ip4_status_code > 0 else ip4_err),
-								  (ip6_status_code if ip6_status_code > 0 else ip6_err))
+								  (ip6_status_code if ip6_status_code > 0 else ip6_err),
+								  hostname, ", ".join(local_ips))
 		except:
 			self._logger.exception("Exception in periodic call of _perform_update_request():")
 
