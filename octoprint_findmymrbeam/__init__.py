@@ -363,17 +363,21 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 			self._public_ip = ip_4body['remote_ip'] if ip_4body is not None and 'remote_ip' in ip_4body else None
 			self._public_ip6 = ip_6body['remote_ip'] if ip_6body is not None and 'remote_ip' in ip_6body else None
-			self._registered = (ip4_status_code == 200 or ip6_status_code == 6)
+			self._registered = (ip4_status_code == 200 or ip6_status_code == 200)
 			self._analytics.log_registered(self._registered, ip4_status_code, ip6_status_code, ip4_err, ip6_err)
 			self.update_frontend()
 
 			if ip4_status_code == 200 or ip6_status_code == 200:
 				self._logger.info(
-					"FindMyMrBeam registration: OK  - ip4_status_code: %s, public_ip: %s, ip6_status_code: %s, "
+					"FindMyMrBeam registration: OK  - ip4_status: %s, public_ip: %s, ip6_status: %s, "
 					"public_ip6: %s, hostname: %s, local_ips: %s, support_mode: %s",
-					ip4_status_code, self._public_ip, ip6_status_code, self._public_ip6, hostname, local_ips, self._support_mode)
+					(ip4_status_code if ip4_status_code > 0 else ip4_err), self._public_ip,
+					(ip6_status_code if ip6_status_code > 0 else ip6_err), self._public_ip6,
+					hostname, local_ips, self._support_mode)
 			else:
-				self._logger.info("FindMyMrBeam registration: ERR - ip4_status_code: %s, ip6_status_code: %s", ip4_status_code, ip6_status_code)
+				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s",
+								  (ip4_status_code if ip4_status_code > 0 else ip4_err),
+								  (ip6_status_code if ip6_status_code > 0 else ip6_err))
 		except:
 			self._logger.exception("Exception in periodic call of _perform_update_request():")
 
