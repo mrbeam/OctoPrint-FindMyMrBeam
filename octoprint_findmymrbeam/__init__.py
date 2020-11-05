@@ -329,6 +329,25 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		except:
 			self._logger.exception("Exception in _on_disabled(): ")
 
+
+	def _get_netconnectd_state(self):
+		res = dict(wifi=None, ap=None, wired=None)
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
+			if pluginInfo is not None:
+				status = pluginInfo.implementation._get_status()
+				if "wifi" in status["connections"]:
+					res["wifi"] = status["connections"]["wifi"]
+				if "ap" in status["connections"]:
+					res["ap"] = status["connections"]["ap"]
+				if "wired" in status["connections"]:
+					res["wired"] = status["connections"]["wired"]
+		except Exception as e:
+			self._logger.exception(
+				"Exception while reading wifi/ap state from netconnectd: {}".format(e)
+			)
+		return res
+
 	def _perform_update_request(self, uuid, scheme, port, path, http_user=None, http_password=None):
 		try:
 			local_ips = []
@@ -337,18 +356,19 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			for addr in octoprint.util.interface_addresses():
 				if netaddr.IPAddress(addr) in LOCALHOST:
 					continue
-
 				# if addr not in ("10.250.250.1",):
 				local_ips.append(addr)
 
 			hostname = socket.gethostname()
+			netconnectd_state = self._get_netconnectd_state()
 
 			data = dict(_version=__version__,
 						uuid=uuid,
-			            name=self._find_name(),
-			            hostname = hostname,
-			            color=self._find_color(),
-			            local_ips=local_ips,
+						name=self._find_name(),
+						hostname = hostname,
+						color=self._find_color(),
+						local_ips=local_ips,
+						netconnectd_state = netconnectd_state,
 						support_mode=self._support_mode,
 			            query="plugin/{}/{}".format(self._identifier, self._secret))
 
@@ -370,15 +390,15 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			if ip4_status_code == 200 or ip6_status_code == 200:
 				self._logger.info(
 					"FindMyMrBeam registration: OK  - ip4_status: %s, public_ip: %s, ip6_status: %s, "
-					"public_ip6: %s, hostname: %s, local_ips: %s, support_mode: %s",
+					"public_ip6: %s, hostname: %s, local_ips: %s, netconnectd_state: %s, support_mode: %s",
 					(ip4_status_code if ip4_status_code > 0 else ip4_err), self._public_ip,
 					(ip6_status_code if ip6_status_code > 0 else ip6_err), self._public_ip6,
-					hostname, ", ".join(local_ips), self._support_mode)
+					hostname, ", ".join(local_ips), netconnectd_state, self._support_mode)
 			else:
-				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s, hostname: %s, local_ips: %s",
+				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s, hostname: %s, local_ips: %s, netconnectd_state: %s",
 								  (ip4_status_code if ip4_status_code > 0 else ip4_err),
 								  (ip6_status_code if ip6_status_code > 0 else ip6_err),
-								  hostname, ", ".join(local_ips))
+								  hostname, ", ".join(local_ips), netconnectd_state)
 		except:
 			self._logger.exception("Exception in periodic call of _perform_update_request():")
 
