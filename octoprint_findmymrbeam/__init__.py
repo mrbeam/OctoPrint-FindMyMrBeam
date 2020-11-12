@@ -13,12 +13,15 @@ import netaddr
 import time
 import socket
 import os
+import random
 
 from analytics import Analytics
 from __version import __version__
 
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
+
+SEARCH_ID_CHARS = "ABCDEFGHKLMNPQRSTUVWXYZ0123456789" # no IJO
 
 class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						 octoprint.plugin.StartupPlugin,
@@ -42,6 +45,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._public_ip = None
 		self._public_ip6 = None
 		self._uuid = None
+		self._search_id = None
 		self._analytics = None
 		self._support_mode = False
 
@@ -73,6 +77,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					instance_dev_name=u"MrBeam Development on '{}'",
 					disable_if_exists=[],
 					public=dict(uuid=None,
+								search_id=None,
 								scheme=None,
 								port=None,
 								path=None,
@@ -167,6 +172,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 	##~~ internal helpers
 
+	def _generate_search_id(self, length=10):
+		return ''.join(random.choice(SEARCH_ID_CHARS) for _ in range(length))
+
+
 	def is_registered(self):
 		"""
 		Is device registered at find.mr-beam.org?
@@ -253,6 +262,13 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			self._uuid = str(u.uuid4())
 			self._settings.set(["public", "uuid"], self._uuid)
 			self._settings.save()
+			
+		# determine search_id to use
+		self._search_id = self._settings.get(["public", "search_id"])
+		if self._search_id is None:
+			self._search_id = self._generate_search_id()
+			self._settings.set(["public", "search_id"], self._search_id)
+			self._settings.save()
 
 		# determine path to use
 		path = self._get_setting([["plugins", "discovery", "pathPrefix"],
@@ -271,7 +287,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._thread = octoprint.util.RepeatedTimer(self._get_interval,
 													self._perform_update_request,
 													args=(self._uuid, scheme, port, path),
-													kwargs=dict(http_user=http_user, http_password=http_password),
+													kwargs=dict(search_id=self._search_id, http_user=http_user, http_password=http_password),
 													run_first=True,
 													condition=self._not_disabled,
 													on_condition_false=self._on_disabled)
@@ -344,7 +360,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			)
 		return res
 
-	def _perform_update_request(self, uuid, scheme, port, path, http_user=None, http_password=None):
+	def _perform_update_request(self, uuid, scheme, port, path, search_id=None, http_user=None, http_password=None):
 		try:
 			local_ips = []
 
@@ -360,6 +376,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 			data = dict(_version=__version__,
 						uuid=uuid,
+                        search_id=search_id,
 						name=self._find_name(),
 						hostname = hostname,
 						color=self._find_color(),
