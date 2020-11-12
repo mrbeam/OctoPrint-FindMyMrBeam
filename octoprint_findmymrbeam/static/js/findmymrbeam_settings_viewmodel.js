@@ -63,7 +63,7 @@ $(function () {
 
         self.verifyByFrontend = function() {
             if (self.registered()) {
-                let registryUrl = "http://find.mr-beam.org/verify";
+                let registryUrl = "https://find.mr-beam.org/verify";
                 let requestData = {
                     uuid: self.uuid(),
                     frontendHost: document.location.host
