@@ -85,23 +85,29 @@ $(function () {
                             verified: self.verified(),
                             status_code: status
                         };
-                        self.send_fontend_event(FRONTEND_VERIFIED, payload)
+                        self.send_fontend_event(FRONTEND_VERIFIED, payload, "analytics_data")
                     })
             } else {
                 self.verified(false);
             }
         };
 
-        self.send_fontend_event = function (event, payload) {
-            return self._send(event, payload);
+        self.send_fontend_event = function (event, payload, endpoint) {
+            return self._send(event, payload, endpoint);
         };
 
-        self._send = function (event, payload) {
+        self._send = function (event, payload, endpoint) {
             let data = {
                 event: event,
                 payload: payload || {}
             };
-            return OctoPrint.simpleApiCommand("findmymrbeam", "analytics_data", data);
+            return $.ajax({
+                url: "plugin/findmymrbeam/" + endpoint,
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json; charset=UTF-8",
+                data: JSON.stringify(data),
+            });
         }
     }
 

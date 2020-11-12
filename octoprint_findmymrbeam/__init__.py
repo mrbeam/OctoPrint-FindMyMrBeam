@@ -7,6 +7,7 @@ import octoprint.events
 from octoprint.server import NO_CONTENT
 
 import flask
+# from flask import request, jsonify, make_response, url_for
 import requests
 import netaddr
 import time
@@ -22,7 +23,7 @@ SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
 class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						 octoprint.plugin.StartupPlugin,
 						 octoprint.plugin.SettingsPlugin,
-						 octoprint.plugin.SimpleApiPlugin,
+						 # octoprint.plugin.SimpleApiPlugin,
 						 octoprint.plugin.BlueprintPlugin,
 						 octoprint.plugin.EventHandlerPlugin,
 						 octoprint.plugin.TemplatePlugin):
@@ -64,23 +65,23 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def get_settings_defaults(self):
 		return dict(enabled=True,
 					url="https://find.mr-beam.org/registry",
-		            interval_client=300.0,
-		            interval_noclient=60.0,
+					interval_client=300.0,
+					interval_noclient=60.0,
 					# configured in config.yaml in appearance:{name: aBook}
-		            instance_with_name=u"{name}",
-		            instance_with_host=u"{host}",
+					instance_with_name=u"{name}",
+					instance_with_host=u"{host}",
 					instance_dev_name=u"MrBeam Development on '{}'",
-		            disable_if_exists=[],
-		            public=dict(uuid=None,
-		                        scheme=None,
-		                        port=None,
-		                        path=None,
-		                        httpUser=None,
-		                        httpPass=None),
-		            dev=dict(
-			            is_mrb_office=False,
-			            hide=False,
-		            ))
+					disable_if_exists=[],
+					public=dict(uuid=None,
+								scheme=None,
+								port=None,
+								path=None,
+								httpUser=None,
+								httpPass=None),
+					dev=dict(
+						is_mrb_office=False,
+						hide=False,
+					))
 
 
 	def on_settings_load(self):
@@ -132,21 +133,16 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		response.headers["Content-Type"] = "image/gif"
 		return response
 
-	##~~ SimpleApiPlugin mixin
+	@octoprint.plugin.BlueprintPlugin.route("/analytics_data", methods=["POST"])
+	def route_analytics_data(self):
+		json_data = None
+		try:
+			json_data = flask.request.json
+		except flask.JSONBadRequest:
+			return flask.make_response("Malformed JSON body in request", 400)
 
-	def get_api_commands(self):
-		return dict(
-			analytics_data=['event', 'payload'],  # analytics data from the frontend
-		)
-
-	def on_api_command(self, command, data):
-		if command == "analytics_data":
-			return self.analytics_data(data)
-		return NO_CONTENT
-
-	def analytics_data(self, data):
-		event = data.get('event')
-		payload = data.get('payload', dict())
+		event = json_data.get('event')
+		payload = json_data.get('payload', dict())
 		self._analytics.log_frontend_event(event, payload)
 		return NO_CONTENT
 
@@ -241,17 +237,17 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 		# determine port to use, first try discovery plugin, then our settings
 		port = self._get_setting([["plugins", "discovery", "publicPort"], ],
-		                         ["public", "port"],
-		                         default_value=self._port)
+								 ["public", "port"],
+								 default_value=self._port)
 
 		# determine scheme (http/https) to use
 		scheme = self._get_setting([["plugins", "discovery", "publicScheme"], ],
-		                           ["public", "scheme"],
-		                           default_value="http")
+								   ["public", "scheme"],
+								   default_value="http")
 
 		# determine uuid to use
 		self._uuid = self._get_setting([["plugins", "discovery", "upnpUuid"], ],
-		                         ["public", "uuid"])
+								 ["public", "uuid"])
 		if self._uuid is None:
 			import uuid as u
 			self._uuid = str(u.uuid4())
@@ -260,31 +256,31 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 		# determine path to use
 		path = self._get_setting([["plugins", "discovery", "pathPrefix"],
-		                          ["server", "reverseProxy", "prefixFallback"]],
-		                         ["public", "path"],
-		                         default_value="/")
+								  ["server", "reverseProxy", "prefixFallback"]],
+								 ["public", "path"],
+								 default_value="/")
 
 		# determine http user and password to use
 		http_user = self._get_setting([["plugins", "discovery", "httpUsername"], ],
-		                              ["public", "httpUser"])
+									  ["public", "httpUser"])
 		http_password = self._get_setting([["plugins", "discovery", "httpPassword"], ],
-		                                  ["public", "httpPass"])
+										  ["public", "httpPass"])
 
 		# start registration thread
 		self._logger.info("Registering with FindMyMrBeam at {}".format(self._url))
 		self._thread = octoprint.util.RepeatedTimer(self._get_interval,
-		                                            self._perform_update_request,
-		                                            args=(self._uuid, scheme, port, path),
-		                                            kwargs=dict(http_user=http_user, http_password=http_password),
-		                                            run_first=True,
-		                                            condition=self._not_disabled,
-		                                            on_condition_false=self._on_disabled)
+													self._perform_update_request,
+													args=(self._uuid, scheme, port, path),
+													kwargs=dict(http_user=http_user, http_password=http_password),
+													run_first=True,
+													condition=self._not_disabled,
+													on_condition_false=self._on_disabled)
 		self._thread.start()
 
 	def _track_ping(self):
 		my_call = dict(host=flask.request.host,
-		               ref=flask.request.referrer,
-		               remote_ip=flask.request.headers.get("X-Forwarded-For"))
+					   ref=flask.request.referrer,
+					   remote_ip=flask.request.headers.get("X-Forwarded-For"))
 		if not my_call in self._calls:
 			self._calls.append(my_call)
 			self._logger.info("First ping received from: %s", my_call)
@@ -370,7 +366,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						local_ips=local_ips,
 						netconnectd_state = netconnectd_state,
 						support_mode=self._support_mode,
-			            query="plugin/{}/{}".format(self._identifier, self._secret))
+						query="plugin/{}/{}".format(self._identifier, self._secret))
 
 			if (self._settings.get(['dev', 'is_mrb_office']) or self._settings.get(['dev', 'hide'])):
 				data['dev'] = self._settings.get(['dev'])
@@ -474,15 +470,15 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def __socket_getaddrinfo_ipv4_only(*args, **kwargs):
 		responses = FindMyMrBeamPlugin._socket_getaddrinfo_regular(*args, **kwargs)
 		return [response
-		        for response in responses
-		        if response[0] == socket.AF_INET]
+				for response in responses
+				if response[0] == socket.AF_INET]
 
 	@staticmethod
 	def __socket_getaddrinfo_ipv6_only(*args, **kwargs):
 		responses = FindMyMrBeamPlugin._socket_getaddrinfo_regular(*args, **kwargs)
 		return [response
-		        for response in responses
-		        if response[0] == socket.AF_INET6]
+				for response in responses
+				if response[0] == socket.AF_INET6]
 
 
 __plugin_name__ = "FindMyMrBeam"
