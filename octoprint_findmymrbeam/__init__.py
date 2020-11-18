@@ -7,11 +7,13 @@ import octoprint.events
 from octoprint.server import NO_CONTENT
 
 import flask
+# from flask import request, jsonify, make_response, url_for
 import requests
 import netaddr
 import time
 import socket
 import os
+import random
 
 from analytics import Analytics
 from __version import __version__
@@ -19,10 +21,12 @@ from __version import __version__
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
 
+SEARCH_ID_CHARS = "ABCDEFGHKLMNPQRSTUVWXYZ0123456789" # no IJO
+
 class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						 octoprint.plugin.StartupPlugin,
 						 octoprint.plugin.SettingsPlugin,
-						 octoprint.plugin.SimpleApiPlugin,
+						 # octoprint.plugin.SimpleApiPlugin,
 						 octoprint.plugin.BlueprintPlugin,
 						 octoprint.plugin.EventHandlerPlugin,
 						 octoprint.plugin.TemplatePlugin):
@@ -41,6 +45,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._public_ip = None
 		self._public_ip6 = None
 		self._uuid = None
+		self._search_id = None
 		self._analytics = None
 		self._support_mode = False
 
@@ -64,23 +69,24 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def get_settings_defaults(self):
 		return dict(enabled=True,
 					url="https://find.mr-beam.org/registry",
-		            interval_client=300.0,
-		            interval_noclient=60.0,
+					interval_client=300.0,
+					interval_noclient=60.0,
 					# configured in config.yaml in appearance:{name: aBook}
-		            instance_with_name=u"{name}",
-		            instance_with_host=u"{host}",
+					instance_with_name=u"{name}",
+					instance_with_host=u"{host}",
 					instance_dev_name=u"MrBeam Development on '{}'",
-		            disable_if_exists=[],
-		            public=dict(uuid=None,
-		                        scheme=None,
-		                        port=None,
-		                        path=None,
-		                        httpUser=None,
-		                        httpPass=None),
-		            dev=dict(
-			            is_mrb_office=False,
-			            hide=False,
-		            ))
+					disable_if_exists=[],
+					public=dict(uuid=None,
+								search_id=None,
+								scheme=None,
+								port=None,
+								path=None,
+								httpUser=None,
+								httpPass=None),
+					dev=dict(
+						is_mrb_office=False,
+						hide=False,
+					))
 
 
 	def on_settings_load(self):
@@ -132,21 +138,16 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		response.headers["Content-Type"] = "image/gif"
 		return response
 
-	##~~ SimpleApiPlugin mixin
+	@octoprint.plugin.BlueprintPlugin.route("/analytics_data", methods=["POST"])
+	def route_analytics_data(self):
+		json_data = None
+		try:
+			json_data = flask.request.json
+		except flask.JSONBadRequest:
+			return flask.make_response("Malformed JSON body in request", 400)
 
-	def get_api_commands(self):
-		return dict(
-			analytics_data=['event', 'payload'],  # analytics data from the frontend
-		)
-
-	def on_api_command(self, command, data):
-		if command == "analytics_data":
-			return self.analytics_data(data)
-		return NO_CONTENT
-
-	def analytics_data(self, data):
-		event = data.get('event')
-		payload = data.get('payload', dict())
+		event = json_data.get('event')
+		payload = json_data.get('payload', dict())
 		self._analytics.log_frontend_event(event, payload)
 		return NO_CONTENT
 
@@ -170,6 +171,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		return result
 
 	##~~ internal helpers
+
+	def _generate_search_id(self, length=10):
+		return ''.join(random.choice(SEARCH_ID_CHARS) for _ in range(length))
+
 
 	def is_registered(self):
 		"""
@@ -241,50 +246,57 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 		# determine port to use, first try discovery plugin, then our settings
 		port = self._get_setting([["plugins", "discovery", "publicPort"], ],
-		                         ["public", "port"],
-		                         default_value=self._port)
+								 ["public", "port"],
+								 default_value=self._port)
 
 		# determine scheme (http/https) to use
 		scheme = self._get_setting([["plugins", "discovery", "publicScheme"], ],
-		                           ["public", "scheme"],
-		                           default_value="http")
+								   ["public", "scheme"],
+								   default_value="http")
 
 		# determine uuid to use
 		self._uuid = self._get_setting([["plugins", "discovery", "upnpUuid"], ],
-		                         ["public", "uuid"])
+								 ["public", "uuid"])
 		if self._uuid is None:
 			import uuid as u
 			self._uuid = str(u.uuid4())
 			self._settings.set(["public", "uuid"], self._uuid)
 			self._settings.save()
+			
+		# determine search_id to use
+		self._search_id = self._settings.get(["public", "search_id"])
+		if self._search_id is None:
+			self._search_id = self._generate_search_id()
+			self._settings.set(["public", "search_id"], self._search_id)
+			self._settings.save()
 
 		# determine path to use
 		path = self._get_setting([["plugins", "discovery", "pathPrefix"],
-		                          ["server", "reverseProxy", "prefixFallback"]],
-		                         ["public", "path"],
-		                         default_value="/")
+								  ["server", "reverseProxy", "prefixFallback"]],
+								 ["public", "path"],
+								 default_value="/")
 
 		# determine http user and password to use
 		http_user = self._get_setting([["plugins", "discovery", "httpUsername"], ],
-		                              ["public", "httpUser"])
+									  ["public", "httpUser"])
 		http_password = self._get_setting([["plugins", "discovery", "httpPassword"], ],
-		                                  ["public", "httpPass"])
+										  ["public", "httpPass"])
 
 		# start registration thread
 		self._logger.info("Registering with FindMyMrBeam at {}".format(self._url))
 		self._thread = octoprint.util.RepeatedTimer(self._get_interval,
-		                                            self._perform_update_request,
-		                                            args=(self._uuid, scheme, port, path),
-		                                            kwargs=dict(http_user=http_user, http_password=http_password),
-		                                            run_first=True,
-		                                            condition=self._not_disabled,
-		                                            on_condition_false=self._on_disabled)
+													self._perform_update_request,
+													args=(self._uuid, scheme, port, path),
+													kwargs=dict(search_id=self._search_id, http_user=http_user, http_password=http_password),
+													run_first=True,
+													condition=self._not_disabled,
+													on_condition_false=self._on_disabled)
 		self._thread.start()
 
 	def _track_ping(self):
 		my_call = dict(host=flask.request.host,
-		               ref=flask.request.referrer,
-		               remote_ip=flask.request.headers.get("X-Forwarded-For"))
+					   ref=flask.request.referrer,
+					   remote_ip=flask.request.headers.get("X-Forwarded-For"))
 		if not my_call in self._calls:
 			self._calls.append(my_call)
 			self._logger.info("First ping received from: %s", my_call)
@@ -329,7 +341,26 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		except:
 			self._logger.exception("Exception in _on_disabled(): ")
 
-	def _perform_update_request(self, uuid, scheme, port, path, http_user=None, http_password=None):
+
+	def _get_netconnectd_state(self):
+		res = dict(wifi=None, ap=None, wired=None)
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
+			if pluginInfo is not None:
+				status = pluginInfo.implementation._get_status()
+				if "wifi" in status["connections"]:
+					res["wifi"] = status["connections"]["wifi"]
+				if "ap" in status["connections"]:
+					res["ap"] = status["connections"]["ap"]
+				if "wired" in status["connections"]:
+					res["wired"] = status["connections"]["wired"]
+		except Exception as e:
+			self._logger.exception(
+				"Exception while reading wifi/ap state from netconnectd: {}".format(e)
+			)
+		return res
+
+	def _perform_update_request(self, uuid, scheme, port, path, search_id=None, http_user=None, http_password=None):
 		try:
 			local_ips = []
 
@@ -337,20 +368,22 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			for addr in octoprint.util.interface_addresses():
 				if netaddr.IPAddress(addr) in LOCALHOST:
 					continue
-
-				if addr not in ("10.250.250.1",):
-					local_ips.append(addr)
+				# if addr not in ("10.250.250.1",):
+				local_ips.append(addr)
 
 			hostname = socket.gethostname()
+			netconnectd_state = self._get_netconnectd_state()
 
 			data = dict(_version=__version__,
 						uuid=uuid,
-			            name=self._find_name(),
-			            hostname = hostname,
-			            color=self._find_color(),
-			            local_ips=local_ips,
+                        search_id=search_id,
+						name=self._find_name(),
+						hostname = hostname,
+						color=self._find_color(),
+						local_ips=local_ips,
+						netconnectd_state = netconnectd_state,
 						support_mode=self._support_mode,
-			            query="plugin/{}/{}".format(self._identifier, self._secret))
+						query="plugin/{}/{}".format(self._identifier, self._secret))
 
 			if (self._settings.get(['dev', 'is_mrb_office']) or self._settings.get(['dev', 'hide'])):
 				data['dev'] = self._settings.get(['dev'])
@@ -363,17 +396,22 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 			self._public_ip = ip_4body['remote_ip'] if ip_4body is not None and 'remote_ip' in ip_4body else None
 			self._public_ip6 = ip_6body['remote_ip'] if ip_6body is not None and 'remote_ip' in ip_6body else None
-			self._registered = (ip4_status_code == 200 or ip6_status_code == 6)
+			self._registered = (ip4_status_code == 200 or ip6_status_code == 200)
 			self._analytics.log_registered(self._registered, ip4_status_code, ip6_status_code, ip4_err, ip6_err)
 			self.update_frontend()
 
 			if ip4_status_code == 200 or ip6_status_code == 200:
 				self._logger.info(
-					"FindMyMrBeam registration: OK  - ip4_status_code: %s, public_ip: %s, ip6_status_code: %s, "
-					"public_ip6: %s, hostname: %s, local_ips: %s, support_mode: %s",
-					ip4_status_code, self._public_ip, ip6_status_code, self._public_ip6, hostname, local_ips, self._support_mode)
+					"FindMyMrBeam registration: OK  - ip4_status: %s, public_ip: %s, ip6_status: %s, "
+					"public_ip6: %s, hostname: %s, local_ips: %s, netconnectd_state: %s, support_mode: %s",
+					(ip4_status_code if ip4_status_code > 0 else ip4_err), self._public_ip,
+					(ip6_status_code if ip6_status_code > 0 else ip6_err), self._public_ip6,
+					hostname, ", ".join(local_ips), netconnectd_state, self._support_mode)
 			else:
-				self._logger.info("FindMyMrBeam registration: ERR - ip4_status_code: %s, ip6_status_code: %s", ip4_status_code, ip6_status_code)
+				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s, hostname: %s, local_ips: %s, netconnectd_state: %s",
+								  (ip4_status_code if ip4_status_code > 0 else ip4_err),
+								  (ip6_status_code if ip6_status_code > 0 else ip6_err),
+								  hostname, ", ".join(local_ips), netconnectd_state)
 		except:
 			self._logger.exception("Exception in periodic call of _perform_update_request():")
 
@@ -449,15 +487,15 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def __socket_getaddrinfo_ipv4_only(*args, **kwargs):
 		responses = FindMyMrBeamPlugin._socket_getaddrinfo_regular(*args, **kwargs)
 		return [response
-		        for response in responses
-		        if response[0] == socket.AF_INET]
+				for response in responses
+				if response[0] == socket.AF_INET]
 
 	@staticmethod
 	def __socket_getaddrinfo_ipv6_only(*args, **kwargs):
 		responses = FindMyMrBeamPlugin._socket_getaddrinfo_regular(*args, **kwargs)
 		return [response
-		        for response in responses
-		        if response[0] == socket.AF_INET6]
+				for response in responses
+				if response[0] == socket.AF_INET6]
 
 
 __plugin_name__ = "FindMyMrBeam"
