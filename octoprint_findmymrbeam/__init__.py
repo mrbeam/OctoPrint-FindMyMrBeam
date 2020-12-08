@@ -23,6 +23,11 @@ SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
 
 SEARCH_ID_CHARS = "ABCDEFGHKLMNPQRSTUVWXYZ0123456789" # no IJO
 
+# internal modes
+MODE_SUPPORT = "SUPPORT"
+MODE_CALIBRATION_TOOL = "CALIBRATION_TOOL"
+
+
 class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						 octoprint.plugin.StartupPlugin,
 						 octoprint.plugin.SettingsPlugin,
@@ -47,7 +52,6 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._uuid = None
 		self._search_id = None
 		self._analytics = None
-		self._support_mode = False
 
 		from random import choice
 		import string
@@ -59,7 +63,6 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def initialize(self):
 		self._analytics = Analytics(self)
 		self._url = self._settings.get(["url"])
-		self._support_mode = os.path.isfile(SUPPORT_STICK_FILE_PATH)
 		self._logger.info("FindMyMrBeam enabled: %s", self.is_enabled())
 		self._analytics.log_enabled(self.is_enabled())
 		self.update_frontend()
@@ -114,6 +117,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 	def on_startup(self, host, port):
 		self._port = port
+
+	def on_after_startup(self):
 		self.start_findmymrbeam()
 
 	##~~ BlueprintPlugin
@@ -318,7 +323,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def _not_disabled(self):
 		enabled = False
 		try:
-			if self._support_mode:
+			if len(self._get_internal_modes()) > 0:
 				enabled = True
 			else:
 				enabled = self._settings.get(["enabled"])
@@ -360,6 +365,21 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			)
 		return res
 
+	def _get_internal_modes(self):
+		internal_modes = []
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
+			if pluginInfo is not None:
+				if pluginInfo.implementation.support_mode:
+					internal_modes.append(MODE_SUPPORT)
+				if pluginInfo.implementation.calibration_tool_mode:
+					internal_modes.append(MODE_CALIBRATION_TOOL)
+		except Exception as e:
+			self._logger.exception(
+				"Exception while reading support mode state from mrbeam: {}".format(e)
+			)
+		return internal_modes
+
 	def _perform_update_request(self, uuid, scheme, port, path, search_id=None, http_user=None, http_password=None):
 		try:
 			local_ips = []
@@ -373,16 +393,20 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 			hostname = socket.gethostname()
 			netconnectd_state = self._get_netconnectd_state()
+			internal_modes = self._get_internal_modes()
+			support_mode = MODE_SUPPORT in internal_modes # legacy
+
 
 			data = dict(_version=__version__,
 						uuid=uuid,
-                        search_id=search_id,
+						search_id=search_id,
 						name=self._find_name(),
 						hostname = hostname,
 						color=self._find_color(),
 						local_ips=local_ips,
 						netconnectd_state = netconnectd_state,
-						support_mode=self._support_mode,
+						support_mode=support_mode, # legacy
+						modes=internal_modes,
 						query="plugin/{}/{}".format(self._identifier, self._secret))
 
 			if (self._settings.get(['dev', 'is_mrb_office']) or self._settings.get(['dev', 'hide'])):
@@ -406,7 +430,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					"public_ip6: %s, hostname: %s, local_ips: %s, netconnectd_state: %s, support_mode: %s",
 					(ip4_status_code if ip4_status_code > 0 else ip4_err), self._public_ip,
 					(ip6_status_code if ip6_status_code > 0 else ip6_err), self._public_ip6,
-					hostname, ", ".join(local_ips), netconnectd_state, self._support_mode)
+					hostname, ", ".join(local_ips), netconnectd_state, support_mode)
 			else:
 				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s, hostname: %s, local_ips: %s, netconnectd_state: %s",
 								  (ip4_status_code if ip4_status_code > 0 else ip4_err),
