@@ -427,10 +427,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			if ip4_status_code == 200 or ip6_status_code == 200:
 				self._logger.info(
 					"FindMyMrBeam registration: OK  - ip4_status: %s, public_ip: %s, ip6_status: %s, "
-					"public_ip6: %s, hostname: %s, local_ips: %s, netconnectd_state: %s, support_mode: %s",
+					"public_ip6: %s, hostname: %s, local_ips: %s, netconnectd_state: %s, internal_modes: %s",
 					(ip4_status_code if ip4_status_code > 0 else ip4_err), self._public_ip,
 					(ip6_status_code if ip6_status_code > 0 else ip6_err), self._public_ip6,
-					hostname, ", ".join(local_ips), netconnectd_state, support_mode)
+					hostname, ", ".join(local_ips), netconnectd_state, internal_modes)
 			else:
 				self._logger.info("FindMyMrBeam registration: ERR - ip4_status: %s, ip6_status: %s, hostname: %s, local_ips: %s, netconnectd_state: %s",
 								  (ip4_status_code if ip4_status_code > 0 else ip4_err),
