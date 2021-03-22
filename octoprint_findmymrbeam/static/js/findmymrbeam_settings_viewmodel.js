@@ -6,32 +6,44 @@ $(function () {
         window.mrbeam.viewModels['findmymrbeamSettingsViewModel'] = self;
         self.settings = params[0];
 
+        self.enabled = ko.observable(null);
+
         self.name = ko.observable(null);
         self.uuid = ko.observable(null);
+        self.searchId = ko.observable(null);
         self.registered = ko.observable(null);
         self.ping = ko.observable(false);
         self.public_ip = ko.observable(null);
         self.public_ip6 = ko.observable(null);
-        self.find_url = ko.computed(function(){
+        self.find_url = ko.computed(function () {
             return "https://find.mr-beam.org"
-                +"?name=" + encodeURIComponent(self.name())
-                +"&uuid=" + encodeURIComponent(self.uuid())
-                +"&public_ip=" + encodeURIComponent(self.public_ip())
-                +"&public_ip6=" + encodeURIComponent(self.public_ip6())
+                + "?name=" + encodeURIComponent(self.name())
+                + "&uuid=" + encodeURIComponent(self.uuid())
+                + "&search_id=" + encodeURIComponent(self.searchId())
+                + "&public_ip=" + encodeURIComponent(self.public_ip())
+                + "&public_ip6=" + encodeURIComponent(self.public_ip6())
                 ;
         });
         self.verified = ko.observable(false);
         self.verification_response = null;
 
         self.onAllBound = function () {
+            self.enabled = self.settings.settings.plugins.findmymrbeam.enabled;
+
             self.name(self.settings.settings.plugins.findmymrbeam.name());
             self.uuid(self.settings.settings.plugins.findmymrbeam.uuid());
+            self.searchId(self.settings.settings.plugins.findmymrbeam.searchId());
             self.registered(self.settings.settings.plugins.findmymrbeam.registered());
             self.ping(self.settings.settings.plugins.findmymrbeam.ping());
+
+            self.enabled.subscribe(function () {
+                self.sendToExtension()
+            })
         };
 
         self.onStartupComplete = function () {
             self.verifyByFrontend();
+            self.sendToExtension()
         };
 
         self.onSettingsShown = function () {
@@ -61,7 +73,20 @@ $(function () {
             self.verifyByFrontend();
         };
 
-        self.verifyByFrontend = function() {
+        self.sendToExtension = function () {
+            if (self.enabled()) {
+                // send to find.mr-beam extension's contentScript
+                // TODO: should be done whenever searchID changes...
+                let payload = {
+                    uui: self.uuid(),
+                    searchId: self.searchId(),
+                    name: self.name()
+                }
+                window.postMessage(payload, window.origin)
+            }
+        }
+
+        self.verifyByFrontend = function () {
             if (self.registered()) {
                 let registryUrl = "https://find.mr-beam.org/verify";
                 let requestData = {
