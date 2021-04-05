@@ -49,6 +49,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._uuid = None
 		self._search_id = None
 		self._analytics = None
+		self._mrb_plugin_version = None
+		self._internal_modes = None
 
 		from random import choice
 		import string
@@ -80,7 +82,9 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					local_ips=self._get_local_ips(),
 					netconnectd_state=self._get_netconnectd_state(),
 					modes=self._get_internal_modes(),
-					query="plugin/{}/{}".format(self._identifier, self._secret))
+					query="plugin/{}/{}".format(self._identifier, self._secret),
+					plugin_version=self._get_plugin_version(),
+					)
 
 	def _get_local_ping_data(self):
 		return dict(_version=__version__,
@@ -92,7 +96,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					netconnectd_state=self._get_netconnectd_state(),
 					modes=self._get_internal_modes(),
 					query="plugin/{}/{}".format(self._identifier, self._secret),
-					plugin_version = self._get_plugin_version(),
+					plugin_version=self._get_plugin_version(),
 					)
 
 	##~~ SettingsPlugin
@@ -252,7 +256,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			public_ip=self._public_ip,
 			public_ip6=self._public_ip6,
 			dev=self._settings.get(['dev']),
-            searchId=self._search_id
+			searchId=self._search_id
 		)
 
 	def _find_name(self):
@@ -377,33 +381,35 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		return res
 
 	def _get_internal_modes(self):
-		internal_modes = []
-		try:
-			pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
-			if pluginInfo is not None:
-				if pluginInfo.implementation.support_mode:
-					internal_modes.append(MODE_SUPPORT)
-				if pluginInfo.implementation.calibration_tool_mode:
-					internal_modes.append(MODE_CALIBRATION_TOOL)
-		except Exception as e:
-			self._logger.exception(
-				"Exception while reading support mode state from mrbeam: {}".format(e)
-			)
-		return internal_modes
+		if self._internal_modes is None:
+			try:
+				internal_modes = []
+				pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
+				if pluginInfo is not None:
+					if pluginInfo.implementation.support_mode:
+						internal_modes.append(MODE_SUPPORT)
+					if pluginInfo.implementation.calibration_tool_mode:
+						internal_modes.append(MODE_CALIBRATION_TOOL)
+					self._internal_modes = internal_modes
+			except Exception as e:
+				self._logger.exception(
+					"Exception while reading support mode state from mrbeam: {}".format(e)
+				)
+		return self._internal_modes
 
 	def _get_plugin_version(self):
-		version = None
-		try:
-			pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
-			# if pluginInfo is not None:
-			# 	version = pluginInfo.version
-			if pluginInfo.implementation._plugin_version:
-				version = pluginInfo.implementation._plugin_version
-		except Exception as e:
-			self._logger.exception(
-				"Exception while reading version from mrbeam: {}".format(e)
-			)
-		return version
+		if self._mrb_plugin_version is None:
+			try:
+				pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
+				# if pluginInfo is not None:
+				# 	version = pluginInfo.version
+				if pluginInfo.implementation._plugin_version:
+					self._mrb_plugin_version = pluginInfo.implementation._plugin_version
+			except Exception as e:
+				self._logger.exception(
+					"Exception while reading version from mrbeam: {}".format(e)
+				)
+		return self._mrb_plugin_version
 
 	def _perform_update_request(self):
 		try:
