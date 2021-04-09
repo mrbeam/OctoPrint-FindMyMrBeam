@@ -49,8 +49,6 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._uuid = None
 		self._search_id = None
 		self._analytics = None
-		self._mrb_plugin_version = None
-		self._internal_modes = None
 
 		from random import choice
 		import string
@@ -60,12 +58,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._all_secrets = self._not_so_secret + [self._secret]
 
 	def initialize(self):
-		self._uuid = self._get_setting([["plugins", "discovery", "upnpUuid"], ], ["public", "uuid"])
-		if self._uuid is None:
-			self._generate_uuid()
-		self._search_id = self._settings.get(["public", "search_id"])
-		if self._search_id is None:
-			self._generate_search_id()
+		self._uuid = self._get_setting([["plugins", "discovery", "upnpUuid"], ], ["public", "uuid"]) or self._generate_uuid()
+		self._search_id = self._settings.get(["public", "search_id"]) or self._generate_search_id()
 		self._analytics = Analytics(self)
 		self._url = self._settings.get(["url"])
 		self._logger.info("FindMyMrBeam enabled: %s", self.is_enabled())
@@ -73,6 +67,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self.update_frontend()
 
 	##~~ data providers ##
+
+	"""
+	This data is sent to the server during device registration.
+	"""
 	def _get_server_registry_data(self):
 		return dict(_version=__version__,
 					uuid=self._uuid,
@@ -86,6 +84,11 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					plugin_version=self._get_plugin_version(),
 					)
 
+
+	"""
+	This data is sent as a response the the data JSON request coming from the find.mr-beam page in the brwoser
+	This is currently not used in production.
+	"""
 	def _get_local_ping_data(self):
 		return dict(_version=__version__,
 					uuid=self._uuid,
@@ -169,7 +172,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		return response
 
 	@octoprint.plugin.BlueprintPlugin.route("/<secret>.json", methods=["GET", "OPTIONS"])
-	def get_device_info(self, secret):
+	def current_status_endpoint(self, secret):
 
 		if secret not in self._all_secrets:
 			flask.abort(404)
@@ -273,13 +276,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		return device_name
 
 	def _get_local_ips(self):
-		local_ips = []
-		for addr in octoprint.util.interface_addresses():
-			if netaddr.IPAddress(addr) in LOCALHOST:
-				continue
-			# if addr not in ("10.250.250.1",):
-			local_ips.append(addr)
-		return local_ips
+		return [addr for addr in octoprint.util.interface_addresses() if netaddr.IPAddress(addr) not in LOCALHOST]
 
 	def _get_setting(self, global_paths, local_path, default_value=None, validator=None):
 		if validator is None:
@@ -381,35 +378,28 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		return res
 
 	def _get_internal_modes(self):
-		if self._internal_modes is None:
-			try:
-				internal_modes = []
-				pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
-				if pluginInfo is not None:
-					if pluginInfo.implementation.support_mode:
-						internal_modes.append(MODE_SUPPORT)
-					if pluginInfo.implementation.calibration_tool_mode:
-						internal_modes.append(MODE_CALIBRATION_TOOL)
-					self._internal_modes = internal_modes
-			except Exception as e:
-				self._logger.exception(
-					"Exception while reading support mode state from mrbeam: {}".format(e)
-				)
-		return self._internal_modes
+		internal_modes = []
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
+			if pluginInfo is not None:
+				if pluginInfo.implementation.support_mode:
+					internal_modes.append(MODE_SUPPORT)
+				if pluginInfo.implementation.calibration_tool_mode:
+					internal_modes.append(MODE_CALIBRATION_TOOL)
+		except Exception as e:
+			self._logger.exception("Exception while reading support mode state from mrbeam: {}".format(e))
+		return internal_modes
 
 	def _get_plugin_version(self):
-		if self._mrb_plugin_version is None:
-			try:
-				pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
-				# if pluginInfo is not None:
-				# 	version = pluginInfo.version
-				if pluginInfo.implementation._plugin_version:
-					self._mrb_plugin_version = pluginInfo.implementation._plugin_version
-			except Exception as e:
-				self._logger.exception(
-					"Exception while reading version from mrbeam: {}".format(e)
-				)
-		return self._mrb_plugin_version
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("mrbeam")
+			if pluginInfo is not None and pluginInfo.implementation._plugin_version:
+				return pluginInfo.implementation._plugin_version
+		except Exception as e:
+			self._logger.exception(
+				"Exception while reading version from mrbeam: {}".format(e)
+			)
+		return None
 
 	def _perform_update_request(self):
 		try:
