@@ -20,6 +20,7 @@ from analytics import Analytics
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
 SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
 
+SEARCH_ID_LENGTH = 10
 SEARCH_ID_CHARS = "ABCDEFGHKLMNPQRSTUVWXYZ0123456789"  # no IJO
 
 # internal modes
@@ -229,7 +230,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._settings.save()
 
 	def _generate_search_id(self):
-		self._search_id = ''.join(random.choice(SEARCH_ID_CHARS) for _ in range(length))
+		self._search_id = ''.join(random.choice(SEARCH_ID_CHARS) for _ in range(SEARCH_ID_LENGTH))
 		self._settings.set(["public", "search_id"], self._search_id)
 		self._settings.save()
 
