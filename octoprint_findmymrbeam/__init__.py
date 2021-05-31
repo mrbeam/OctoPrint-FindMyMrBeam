@@ -34,7 +34,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 						 # octoprint.plugin.SimpleApiPlugin,
 						 octoprint.plugin.BlueprintPlugin,
 						 octoprint.plugin.EventHandlerPlugin,
-						 octoprint.plugin.TemplatePlugin):
+						 octoprint.plugin.TemplatePlugin,
+						 octoprint.plugin.EnvironmentDetectionPlugin):
 	_socket_getaddrinfo_regular = None
 
 	def __init__(self):
@@ -66,6 +67,19 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._logger.info("FindMyMrBeam enabled: %s", self.is_enabled())
 		self._analytics.log_enabled(self.is_enabled())
 		self.update_frontend()
+
+
+	def get_additional_environment(self):
+		"""
+			Mixin: octoprint.plugin.EnvironmentDetectionPlugin
+			:return: dict of environment data
+			"""
+		return dict(
+			version=self._plugin_version,
+            # uuid and search_id will be None on first boot
+			uuid=self._uuid,
+			search_id=self._search_id,
+		)
 
 	##~~ data providers ##
 
