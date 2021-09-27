@@ -239,9 +239,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 	def _generate_uuid(self):
 		import uuid as u
-		self._uuid = str(u.uuid4())
-		self._settings.set(["public", "uuid"], self._uuid)
+		temp_uuid = str(u.uuid4())
+		self._settings.set(["public", "uuid"], temp_uuid, force=True)
 		self._settings.save()
+		return temp_uuid
 
 	def _generate_search_id(self):
 		self._search_id = ''.join(random.choice(SEARCH_ID_CHARS) for _ in range(SEARCH_ID_LENGTH))
@@ -419,6 +420,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 	def _perform_update_request(self):
 		try:
 			data = self._get_server_registry_data()
+			self._logger.debug('server registry data - {}'.format(data))
 
 			headers = {"User-Agent": "OctoPrint-FindMyMrBeam/{}".format(self._plugin_version)}
 
@@ -482,6 +484,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		try:
 			r = requests.post(self._url, json=data, headers=headers)
 			status_code = r.status_code
+			self._logger.debug('request json data - {}'.format(r))
 			try:
 				body = r.json()
 			except ValueError as e:
