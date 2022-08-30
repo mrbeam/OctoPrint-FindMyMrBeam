@@ -14,7 +14,6 @@ import octoprint.util
 import requests
 from octoprint.server import NO_CONTENT
 
-from __version import __version__
 from analytics import Analytics
 
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
@@ -541,3 +540,7 @@ def __plugin_load__():
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {}
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
