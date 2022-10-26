@@ -4,6 +4,7 @@
 import random
 import socket
 import time
+import subprocess
 
 import flask
 import netaddr
@@ -96,8 +97,33 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					modes=self._get_internal_modes(),
 					query="plugin/{}/{}".format(self._identifier, self._secret),
 					plugin_version=self._get_plugin_version(),
+					local_dns_domain_name=self._get_dns_domain_names()
 					)
 
+	@staticmethod
+	def _get_dns_domain_names():
+		"""
+		Try and get the dns domain name for the device
+
+		Returns:
+			list: Collected DNS domain names for the device, in case of error, return ["Exception ..."]
+
+		"""
+
+		try:
+			dns_domain_names_str = subprocess.check_output(["dnsdomainname", "-A"], stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError as e:
+			# The complete Error is copied to the return so that we can see it in findmrbeam registry
+			return ["Exception: {} ".format(e) + "##Code: {} ".format(e.returncode) + "##Output: {}".format(e.output)]
+		except (subprocess.SubprocessError, OSError) as e:
+			# The complete Error is copied to the return so that we can see it in findmrbeam registry
+			return "Exception: {}".format(e)
+		else:
+			# Remove new line if any and Convert to a list of sub strings, each could be a dns domain name candidate
+			dns_domain_names = dns_domain_names_str.strip().split(" ")
+			# Remove duplicates
+			dns_domain_names = list(set(dns_domain_names))
+			return dns_domain_names
 
 	"""
 	This data is sent as a response the the data JSON request coming from the find.mr-beam page in the brwoser
