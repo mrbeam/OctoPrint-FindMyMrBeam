@@ -106,7 +106,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		Try and get the dns domain name for the device
 
 		Returns:
-			list: Collected dns domain names for the device, in cas of error, return ["Exception ..."]
+			list: Collected DNS domain names for the device, in case of error, return ["Exception ..."]
 
 		"""
 
