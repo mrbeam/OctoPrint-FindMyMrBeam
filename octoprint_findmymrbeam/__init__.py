@@ -2,11 +2,13 @@
 # coding=utf-8
 
 import random
+import re
 import socket
 import time
 import subprocess
 
 import flask
+import netifaces
 import netaddr
 import octoprint.events
 import octoprint.plugin
@@ -97,7 +99,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					modes=self._get_internal_modes(),
 					query="plugin/{}/{}".format(self._identifier, self._secret),
 					plugin_version=self._get_plugin_version(),
-					local_dns_domain_name=self._get_dns_domain_names()
+					local_dns_domain_name=self._get_dns_domain_names(),
+					netifaces=self._get_netifaces()
 					)
 
 	@staticmethod
@@ -124,6 +127,45 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			# Remove duplicates
 			dns_domain_names = list(set(dns_domain_names))
 			return dns_domain_names
+
+	@staticmethod
+	def _get_netifaces():
+		"""
+		Get the network interfaces for the device including the IPv4 and IPv6 and return them back
+
+		Returns:
+			list : network interfaces list
+
+		"""
+		netifaces_list = []
+
+		# 1. Get all the interfaces names that comply to the regex mentioned, only wlan and eth interfaces
+		iface_names_list = \
+			[iface_name for iface_name in netifaces.interfaces() if re.match("eth[0-9].*|wlan[0-9].*", iface_name) is not None]
+
+		# 2. For each interface, find IPv4 & IPv6 addresses
+		for iface in iface_names_list:
+			iface_dict = {
+				"name": iface,
+				"addr": {}
+			}
+			iface_addrs = netifaces.ifaddresses(iface)
+			# 2.a Extract IPv4 if any
+			if netifaces.AF_INET in iface_addrs:
+				iface_dict["addr"]["ipv4"] = []
+				for addr_candidate in iface_addrs[netifaces.AF_INET]:
+					if not addr_candidate["addr"].startswith("169.254."):
+						iface_dict["addr"]["ipv4"].append(addr_candidate["addr"])
+			# 2.b Extract IPv6 if any
+			if netifaces.AF_INET6 in iface_addrs:
+				iface_dict["addr"]["ipv6"] = []
+				for addr_candidate in iface_addrs[netifaces.AF_INET6]:
+					iface_dict["addr"]["ipv6"].append(addr_candidate["addr"])
+
+			# 2.c Add the interface to the list
+			netifaces_list.append(iface_dict)
+
+		return netifaces_list
 
 	"""
 	This data is sent as a response the the data JSON request coming from the find.mr-beam page in the brwoser
