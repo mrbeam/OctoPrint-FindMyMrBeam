@@ -141,7 +141,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 		# 1. Get all the interfaces names that comply to the regex mentioned, only wlan and eth interfaces
 		iface_names_list = \
-			[iface_name for iface_name in netifaces.interfaces() if re.match("eth[0-9].*|wlan[0-9].*", iface_name) is not None]
+			[iface_name for iface_name in netifaces.interfaces() if re.match(r"eth\d.*|wlan\d.*", iface_name) is not None]
 
 		# 2. For each interface, find IPv4 & IPv6 addresses
 		for iface in iface_names_list:
