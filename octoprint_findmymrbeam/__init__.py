@@ -141,24 +141,22 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 		# 1. Get all the interfaces names that comply to the regex mentioned, only wlan and eth interfaces
 		iface_names_list = \
-			[iface_name for iface_name in netifaces.interfaces() if re.match(r"eth\d.*|wlan\d.*", iface_name) is not None]
+			[iface_name for iface_name in netifaces.interfaces() if re.match(r"eth\d|wlan\d", iface_name) is not None]
 
 		# 2. For each interface, find IPv4 & IPv6 addresses
 		for iface in iface_names_list:
 			iface_dict = {
 				"name": iface,
-				"addr": {}
+				"addr": {"ipv4": [], "ipv6": []}
 			}
 			iface_addrs = netifaces.ifaddresses(iface)
 			# 2.a Extract IPv4 if any
 			if netifaces.AF_INET in iface_addrs:
-				iface_dict["addr"]["ipv4"] = []
 				for addr_candidate in iface_addrs[netifaces.AF_INET]:
 					if not addr_candidate["addr"].startswith("169.254."):
 						iface_dict["addr"]["ipv4"].append(addr_candidate["addr"])
 			# 2.b Extract IPv6 if any
 			if netifaces.AF_INET6 in iface_addrs:
-				iface_dict["addr"]["ipv6"] = []
 				for addr_candidate in iface_addrs[netifaces.AF_INET6]:
 					iface_dict["addr"]["ipv6"].append(addr_candidate["addr"])
 
