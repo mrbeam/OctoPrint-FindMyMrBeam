@@ -2,10 +2,13 @@
 # coding=utf-8
 
 import random
+import re
 import socket
 import time
+import subprocess
 
 import flask
+import netifaces
 import netaddr
 import octoprint.events
 import octoprint.plugin
@@ -14,7 +17,6 @@ import octoprint.util
 import requests
 from octoprint.server import NO_CONTENT
 
-from __version import __version__
 from analytics import Analytics
 
 LOCALHOST = netaddr.IPNetwork("127.0.0.0/8")
@@ -97,8 +99,71 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					modes=self._get_internal_modes(),
 					query="plugin/{}/{}".format(self._identifier, self._secret),
 					plugin_version=self._get_plugin_version(),
+					local_dns_domain_name=self._get_dns_domain_names(),
+					netifaces=self._get_netifaces()
 					)
 
+	@staticmethod
+	def _get_dns_domain_names():
+		"""
+		Try and get the dns domain name for the device
+
+		Returns:
+			list: Collected DNS domain names for the device, in case of error, return ["Exception ..."]
+
+		"""
+
+		try:
+			dns_domain_names_str = subprocess.check_output(["dnsdomainname", "-A"], stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError as e:
+			# The complete Error is copied to the return so that we can see it in findmrbeam registry
+			return ["Exception: {} ".format(e) + "##Code: {} ".format(e.returncode) + "##Output: {}".format(e.output)]
+		except (subprocess.SubprocessError, OSError) as e:
+			# The complete Error is copied to the return so that we can see it in findmrbeam registry
+			return "Exception: {}".format(e)
+		else:
+			# Remove new line if any and Convert to a list of sub strings, each could be a dns domain name candidate
+			dns_domain_names = dns_domain_names_str.strip().split(" ")
+			# Remove duplicates
+			dns_domain_names = list(set(dns_domain_names))
+			return dns_domain_names
+
+	@staticmethod
+	def _get_netifaces():
+		"""
+		Get the network interfaces for the device including the IPv4 and IPv6 and return them back
+
+		Returns:
+			list : network interfaces list
+
+		"""
+		netifaces_list = []
+
+		# 1. Get all the interfaces names that comply to the regex mentioned, only wlan and eth interfaces
+		iface_names_list = \
+			[iface_name for iface_name in netifaces.interfaces() if re.match(r"eth\d|wlan\d", iface_name) is not None]
+
+		# 2. For each interface, find IPv4 & IPv6 addresses
+		for iface in iface_names_list:
+			iface_dict = {
+				"name": iface,
+				"addr": {"ipv4": [], "ipv6": []}
+			}
+			iface_addrs = netifaces.ifaddresses(iface)
+			# 2.a Extract IPv4 if any
+			if netifaces.AF_INET in iface_addrs:
+				for addr_candidate in iface_addrs[netifaces.AF_INET]:
+					if not addr_candidate["addr"].startswith("169.254."):
+						iface_dict["addr"]["ipv4"].append(addr_candidate["addr"])
+			# 2.b Extract IPv6 if any
+			if netifaces.AF_INET6 in iface_addrs:
+				for addr_candidate in iface_addrs[netifaces.AF_INET6]:
+					iface_dict["addr"]["ipv6"].append(addr_candidate["addr"])
+
+			# 2.c Add the interface to the list
+			netifaces_list.append(iface_dict)
+
+		return netifaces_list
 
 	"""
 	This data is sent as a response the the data JSON request coming from the find.mr-beam page in the brwoser
@@ -541,3 +606,7 @@ def __plugin_load__():
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {}
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
