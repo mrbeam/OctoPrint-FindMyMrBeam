@@ -186,7 +186,10 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 	def get_settings_defaults(self):
 		return dict(enabled=True,
-					url="https://find.mr-beam.org/registry",
+					# Revert this change before beta release(https://mr-beam.atlassian.net/browse/SW-2272)
+					# in https://mr-beam.atlassian.net/browse/SW-2273
+					# url="https://find.mr-beam.org/registry",
+					url="https://alpha-dot-find-mr-beam.appspot.com/registry",
 					interval_client=300.0,
 					interval_noclient=60.0,
 					# configured in config.yaml in appearance:{name: aBook}
