@@ -6,6 +6,7 @@ import re
 import socket
 import time
 import subprocess
+import urllib
 
 import flask
 import netifaces
@@ -53,6 +54,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._uuid = None
 		self._search_id = None
 		self._analytics = None
+		self._dns_domain_names = None
+		self._verified_dns_domain_names = None
 
 		from random import choice
 		import string
@@ -69,6 +72,7 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._logger.info("FindMyMrBeam enabled: %s", self.is_enabled())
 		self._analytics.log_enabled(self.is_enabled())
 		self.update_frontend()
+		self._verified_dns_domain_names = self._get_dns_domain_names()
 
 
 	def get_additional_environment(self):
@@ -103,22 +107,22 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 					netifaces=self._get_netifaces()
 					)
 
-	@staticmethod
-	def _get_dns_domain_names():
+	def _get_dns_domain_names(self):
 		"""
 		Try and get the dns domain name for the device
+		Warning: This method will consume some time due to trying to verify dnsdomain names,
+		The implementation of this method is done so that the verification would only be done if it is needed
 
 		Returns:
-			list: Collected DNS domain names for the device, in case of error, return ["Exception ..."]
+			list: Collected & verified DNS domain names for the device, in case of error, return ["Exception ..."]
 
 		"""
-
 		try:
 			dns_domain_names_str = subprocess.check_output(["dnsdomainname", "-A"], stderr=subprocess.STDOUT)
 		except subprocess.CalledProcessError as e:
 			# The complete Error is copied to the return so that we can see it in findmrbeam registry
 			return ["Exception: {} ".format(e) + "##Code: {} ".format(e.returncode) + "##Output: {}".format(e.output)]
-		except (subprocess.SubprocessError, OSError) as e:
+		except (OSError, ValueError) as e:
 			# The complete Error is copied to the return so that we can see it in findmrbeam registry
 			return "Exception: {}".format(e)
 		else:
@@ -126,7 +130,29 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 			dns_domain_names = dns_domain_names_str.strip().split(" ")
 			# Remove duplicates
 			dns_domain_names = list(set(dns_domain_names))
-			return dns_domain_names
+
+		# If same list of names, return the last verified list
+		if dns_domain_names == self._dns_domain_names:
+			return self._verified_dns_domain_names
+
+		# Check if all retrieved domain names are reachable
+		self._dns_domain_names = dns_domain_names
+		verified_dns_domain_names = []
+		http_status_code = None
+		for d_name in dns_domain_names:
+			try:
+				http_status_code = urllib.urlopen("http://{}".format(d_name)).getcode()
+				if http_status_code == 200:
+					self._logger.info("dnsdomainname: Valid dns domain name verified: {}".format(d_name))
+					verified_dns_domain_names.append(d_name)
+				else:
+					raise ValueError
+			except ValueError as e:
+				self._logger.debug('{}, dnsdomainname URL  HTTP status code {}'.format(e, http_status_code))
+			except IOError as e:
+				# Invalid domain name or not reachable, discard from the list
+				self._logger.debug('dnsdomainname Invalid domain name. --> {}'.format(e))
+		return verified_dns_domain_names
 
 	@staticmethod
 	def _get_netifaces():
