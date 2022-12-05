@@ -6,7 +6,7 @@ import re
 import socket
 import time
 import subprocess
-import urllib
+import urllib2
 
 import flask
 import netifaces
@@ -141,7 +141,9 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		http_status_code = None
 		for d_name in dns_domain_names:
 			try:
-				http_status_code = urllib.urlopen("http://{}".format(d_name)).getcode()
+				# By doing some testing, usually it needs less than 1 sec to open a local url
+				# Added Max of 3 sec here to make sure that it still works on other complex network setups
+				http_status_code = urllib2.urlopen("http://{}".format(d_name), timeout=3).getcode()
 				if http_status_code == 200:
 					self._logger.info("dnsdomainname: Valid dns domain name verified: {}".format(d_name))
 					verified_dns_domain_names.append(d_name)
