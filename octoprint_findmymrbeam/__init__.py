@@ -419,6 +419,8 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 		self._thread.start()
 
 	def _cancel_update_thread(self):
+		# cancel current registration thread
+		self._logger.warn("Cancel currently running thread object")
 		self._thread.cancel()
 		self._thread = None
 
