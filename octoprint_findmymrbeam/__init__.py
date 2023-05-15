@@ -404,13 +404,11 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 
 	def start_findmymrbeam(self):
 		if self._url and self.is_enabled():
+			if self._thread:
+				self._cancel_update_thread()
 			self._start_update_thread()
 
 	def _start_update_thread(self):
-		if self._thread:
-			self._logger.warn("_start_update_thread() thread object already present. skipping")
-			return
-
 		# start registration thread
 		self._logger.info("Registering with FindMyMrBeam at {}".format(self._url))
 		self._thread = octoprint.util.RepeatedTimer(self._get_interval,
@@ -419,6 +417,12 @@ class FindMyMrBeamPlugin(octoprint.plugin.AssetPlugin,
 													condition=self._not_disabled,
 													on_condition_false=self._on_disabled)
 		self._thread.start()
+
+	def _cancel_update_thread(self):
+		# cancel current registration thread
+		self._logger.warn("Cancel currently running thread object")
+		self._thread.cancel()
+		self._thread = None
 
 	def _track_ping(self):
 		my_call = dict(host=flask.request.host,
